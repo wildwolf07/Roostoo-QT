@@ -22,7 +22,7 @@ Ground rules
 6. [x] Scoring-aware analysis: how vol target trades off P(top-20 return) against
        Sortino/Sharpe/Calmar over a 7-day horizon (Monte Carlo from backtest returns).
 7. [x] Live monitoring script: composite score from equity log, live vs backtest tracking.
-8. [ ] Finale prep: decision log, deck outline (Oct 27 if finalist), README polish.
+8. [x] Finale prep: decision log, deck outline (Oct 27 if finalist), README polish.
 
 9. [x] Stress test on 2021-2022 (LUNA, FTX crashes, full bear market) as extra out-of-sample.
 10. [ ] Finale deck outline + README final polish; tag v1.0-submission before Oct 14.
@@ -77,3 +77,6 @@ Ground rules
   full Sharpe 1.08 -> 1.55, max DD 28.3% -> 19.0%, 5 of 6 years better (2024 worse), BUT median
   14-day composite 3.27 -> 1.95 (lags; misses rebounds in typical windows). Mixed evidence on the
   contest metric => NOT adopted. Contingency only: BTC is +2.3% above its SMA50 now (filter inactive).
+- #8 DONE: docs/FINALE_DECK.md (10-slide storyline), DECISIONS.md, README "Results at a glance"
+  with SVG charts (research/make_charts.py; no new dependencies). Shadow bot running on the TEST
+  account on this Mac to mirror the live 00:00 UTC rebalance (logs/bot.log).
