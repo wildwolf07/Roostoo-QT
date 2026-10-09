@@ -46,7 +46,7 @@
                  ┌─────────────────────── every rebalance (hourly) ─────────────────┐
  Binance klines ►│ hourly closes ─► market_regime(BTC) ─► momentum_scores           │
                  │   ─► target_weights (inverse-vol, vol target, caps)              │
-                 │   ─► RiskManager.exposure_multiplier (DD brake, CPPI, 24h limit) │
+                 │   ─► RiskManager.exposure_multiplier (drawdown brake)        │
                  │   ─► apply_risk ─► Executor (sells → buys, maker-first)          │
                  └──────────────────────────────────────────────────────────────────┘
 ```
@@ -56,7 +56,7 @@
 | `bot/api/roostoo_client.py` | HMAC-SHA256 signing, rate limiter (≤20 calls/min vs 30 limit), retries with backoff, `Success`-flag handling, audit hook |
 | `bot/data/market_data.py` | Binance hourly klines (Roostoo has no OHLCV), ticker parsing, universe selection by 24h volume |
 | `bot/strategy/signals.py` | **Pure functions** shared by live bot and backtester: regime, momentum, sizing |
-| `bot/risk/risk_manager.py` | Drawdown brake, CPPI cap, 24h loss limit, end-of-contest taper, trailing stops, cooldowns |
+| `bot/risk/risk_manager.py` | Drawdown brake and end-of-contest taper (CPPI cap, 24h loss limit and trailing stops available but disabled by research) |
 | `bot/execution/executor.py` | Targets → orders, precision rounding, deadbands, maker-first with market fallback |
 | `bot/storage/db.py` | SQLite audit trail: every API call, order (with reason), decision, equity snapshot |
 | `bot/main.py` | Autonomous scheduler loop with crash recovery and persisted state |

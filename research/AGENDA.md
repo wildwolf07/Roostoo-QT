@@ -66,3 +66,10 @@ Ground rules
   stops SR 0.75 (0.35 / 1.46, MDD 18.2%); old 3-8% 0.74; wide 10-25% 0.94. DISABLED stops
   (commit 0412056, pushed, fresh clone OK). User deployed 640a349 and was given the command for 0412056.
 - #7 DONE earlier: scripts/daily_report.py (contest-window composite estimate).
+- #9 stress test (research/stress_test.py, 2021-01 -> 2022-12, never used for design; 21 coins).
+  Calendar Sharpe 2021 2.81, 2022 -1.42 (then 2023 1.47, 2024 1.26, 2025 1.39, 2026 0.94).
+  2021-02..2022-12: +19.8%, Sharpe 0.70, max DD 28.3% (BTC -49.2%). 98 fourteen-day windows:
+  median +0.57%, P(>0) 56%, median MDD 2.94%, p95 6.32%, median composite 2.73.
+  Crashes: LUNA -6.7% (market -23.2%), 3AC -4.2% (-21.2%), FTX -1.5% (-18.8%).
+  Weakness = prolonged bear (net long +0.31 from the long-only sleeves). Testing a slow
+  market-trend filter on the long-only sleeves (research/bear_filter.py).

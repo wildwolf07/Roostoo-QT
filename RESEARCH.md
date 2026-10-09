@@ -167,3 +167,18 @@ ensemble lost −2.3% while the market lost −20.6% and BTC −9.4%. Average ne
 +0.31 and gross 0.64. Per-coin trailing stops reduced Sharpe in **both** periods (none 1.27;
 6–15% stops 0.75; 3–8% 0.74; 10–25% 0.94) without lowering max drawdown, so they are disabled.
 Portfolio-level protection remains the 2.5–7% drawdown brake.
+
+**Stress test on unseen data** (`research/stress_test.py`, 2021-01 → 2022-12; no data from this
+period was used to design anything): the ensemble returned **+19.8% (Sharpe 0.70) while BTC
+fell −49.2%**. Across 98 fourteen-day windows: median return +0.57%, 56% positive, median max
+drawdown 2.9%, median composite 2.73, in line with the main out-of-sample results.
+
+| Crash | Ensemble | Equal-weight market | BTC |
+|---|---|---|---|
+| LUNA (2022-05-07..13) | −6.7% | −23.2% | −18.8% |
+| 3AC/Celsius (2022-06-10..19) | −4.2% | −21.2% | −35.9% |
+| FTX (2022-11-06..10) | −1.5% | −18.8% | −18.0% |
+
+Calendar-year Sharpe: 2021 2.81, **2022 −1.42**, 2023 1.47, 2024 1.26, 2025 1.39, 2026 0.94.
+The known weakness is a *prolonged* bear market, through the net long tilt (+0.31) of the two
+long-only sleeves.
