@@ -129,6 +129,13 @@ class TestShorts(unittest.TestCase):
         self.assertAlmostEqual(pf.equity, 100_500)
         self.assertAlmostEqual(pf.weights()["SOL"], -9_500 / 100_500)
 
+    def test_short_collateral_not_double_counted(self):
+        # real Roostoo response shape: USD Lock includes ShortCollateral
+        bal = {"Success": True, "SpotWallet": {"USD": {"Free": 90_000, "Lock": 10_000, "ShortCollateral": 10_000}}}
+        shorts = {"Success": True, "Positions": [{"Pair": "SOL/USD", "ShortQty": 100, "CurrentPrice": 100,
+                                                   "Collateral": 10_000, "PositionValue": 10_000}]}
+        self.assertAlmostEqual(build_portfolio(bal, self.ticker, shorts).equity, 100_000)
+
     def test_plan_opens_and_closes_shorts(self):
         pf = Portfolio(usd_free=100_000, usd_total=100_000)
         plans = self.ex.plan({"SOL": -0.2}, pf, self.ticker, 0.02)

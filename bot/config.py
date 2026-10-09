@@ -36,39 +36,43 @@ class StrategyConfig:
     )
     universe_size: int = 12            # top-N of whitelist by 24h USD volume
     bar_interval: str = "1h"
-    history_bars: int = 400            # hourly bars fetched for indicators
+    history_bars: int = 500            # hourly bars fetched for indicators (>= 336 + tranche offsets)
 
     # Regime (BTC as market factor)
     regime_fast_ema: int = 24
     regime_slow_ema: int = 72
 
     # Momentum: vol-normalised returns averaged over several lookbacks (hours)
-    mom_lookbacks: tuple = (24, 72, 168)
+    mom_lookbacks: tuple = (168, 336)  # 7d and 14d: short lookbacks mean-revert (see RESEARCH.md)
     vol_lookback: int = 72
     max_positions: int = 4
-    rebalance_hours: int = 1           # scheduled rebalance every N hours (UTC-aligned)
+    rebalance_hours: int = 24          # scheduled rebalance every N hours (UTC-aligned)
     hold_rank_buffer: int = 0          # hysteresis: keep a held coin while rank < max_positions + buffer
     # "trend": regime-gated long momentum (+ optional RISK_OFF short sleeve)
     # "xs": cross-sectional momentum, long the strongest / short the weakest, near market-neutral
     # "blend": 50/50 average of the two styles above
-    style: str = "trend"
+    style: str = "blend"
     # Tranching: average the targets computed at t, t-spacing, t-2*spacing, ... so the book
     # behaves like overlapping sub-portfolios (daily trades, slow turnover, less timing luck)
-    tranches: int = 1
+    tranches: int = 3
     tranche_spacing_hours: int = 24
     xs_net_bias: float = 0.0           # xs only: net exposure tilt per regime unit (0 = neutral)
-    use_regime_gate: bool = True       # trend only: scale longs by BTC regime
+    use_regime_gate: bool = False      # trend only: scale longs by BTC regime (added no value in tests)
     # Short sleeve: in RISK_OFF, short the weakest coins (Roostoo /v6 shorts, 0.1% fee each way)
     enable_shorts: bool = False
     short_max_positions: int = 3
     short_max_gross: float = 0.6
     short_exclude: tuple = ("PAXG",)
 
+    @property
+    def uses_shorts(self) -> bool:
+        return self.enable_shorts or self.style in ("xs", "blend")
+
     # Sizing
     target_daily_vol: float = 0.012    # portfolio daily vol target (1.2%)
     max_weight: float = 0.30           # per-asset cap
     max_gross: float = 0.95            # never fully invested; no leverage
-    min_gross: float = 0.10            # keep a small core so the bot trades daily
+    min_gross: float = 0.0             # optional always-on core sleeve (off: it lost money in tests)
     core_asset: str = "BTC"            # core sleeve used when nothing qualifies
 
 

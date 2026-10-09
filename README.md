@@ -12,22 +12,25 @@
 
 | | |
 |---|---|
-| Style | Directional, medium-frequency (hourly decisions), long + cash |
-| Universe | Liquid crypto majors on Roostoo that also trade on Binance (for history) |
-| Core idea | Trend-following (time-series momentum), gated by a BTC market regime, sized by volatility targeting, wrapped in automatic drawdown controls |
+| Style | Directional, low-turnover: daily rebalance of a long/short book |
+| Universe | 12 most liquid of 25 whitelisted crypto majors (by Roostoo 24h volume) |
+| Core idea | 50/50 blend of (a) long-only 7–14 day momentum and (b) market-neutral cross-sectional momentum (long strongest / short weakest), tranched over 3 days, volatility-targeted, wrapped in automatic drawdown controls |
 | Execution | Maker-first limit orders (0.05% fee) with market fallback; deadbands to cut turnover |
 | Autonomy | Runs 24/7 on AWS EC2 under systemd; no manual input of any kind |
 
-### Why this strategy
-1. **Momentum / trend is one of the most persistent effects in crypto.** We use a
-   multi-lookback, volatility-normalised score so no single parameter dominates.
-2. **The market factor (BTC) drives most altcoin drawdowns.** A regime gate keeps the
-   book mostly in cash when BTC trends down, which is where most losses come from.
-3. **Volatility targeting smooths returns.** Scaling exposure to a constant expected
-   portfolio volatility directly improves Sharpe and Sortino.
+### Why this strategy (full evidence in [RESEARCH.md](RESEARCH.md))
+1. **Measured, not assumed.** Our first design (fast hourly trend + BTC regime gate) lost
+   money in 69 two-week backtests. Diagnosing it showed that **short-horizon returns
+   mean-revert** while **7–14 day relative strength persists**, so we rebuilt around the
+   slow signal.
+2. **Two weakly-correlated sleeves.** Long-only momentum earns in up-trends; the
+   market-neutral long/short sleeve earns from dispersion between coins regardless of
+   direction. Blending them gave the **lowest drawdown** of every candidate.
+3. **Volatility targeting smooths returns.** Exposure is sized for a constant expected
+   portfolio volatility, which directly helps Sharpe and Sortino.
 4. **Calmar = return / max drawdown.** Automatic drawdown brakes cap the denominator.
-5. **Fees are the silent killer.** A round trip costs 0.1–0.2%; our backtests showed fees
-   were the single largest drag, so turnover control is a first-class design goal.
+5. **Fees are the silent killer.** Fees were the largest drag in v0, so turnover control
+   (daily tranching, deadbands, maker orders) is a first-class design goal.
 
 ---
 
@@ -66,7 +69,32 @@ Tech stack: Python 3.9+, `requests`, `numpy`, `pandas`, SQLite, systemd on AWS E
 
 ## 3. Strategy explanation
 
-_Section filled in with final parameters and backtest evidence — see below._
+**Signal.** For each coin: `score = mean over L in {168h, 336h} of log_return(L) / (hourly_vol × √L)`,
+a t-statistic-like trend strength that is comparable across coins of different volatility.
+
+**Sleeve A: trend (long-only).** Hold the top 4 coins with positive score, weighted by
+inverse volatility, scaled so the sleeve's expected daily volatility ≈ 1.2%.
+
+**Sleeve B: cross-sectional (market-neutral).** Long the top 4 scores, short the bottom 3
+(via Roostoo `/v6` shorts), inverse-vol weighted, equal gross per side, same vol target.
+
+**Blend and tranching.** Target = average of (A + B)/2 computed on data ending now, 24h
+ago and 48h ago. That equals three overlapping sub-portfolios, each held ~3 days, so the
+bot trades daily while keeping turnover low and reducing timing luck.
+
+**Entry / exit.** A coin enters when it ranks in the selected set and leaves when it drops
+out, or immediately if its trailing stop triggers. A new rebalance runs daily at 00:00 UTC.
+Gaps below 2% of equity are ignored (deadband).
+
+**Position sizing.** Inverse volatility × vol target × risk multiplier, capped at 30% per
+coin and 95% gross. There is never leverage: shorts are fully collateralised in USD.
+
+| Key parameter | Value | Why |
+|---|---|---|
+| Lookbacks | 168h, 336h | Positive IC at 1–3 day horizons; short lookbacks mean-revert |
+| Rebalance | daily, 3 tranches | Daily activity with ~3-day holding period |
+| Vol target | 1.2% / day | Smooth equity curve; 1.5% tested worse |
+| Universe | top-12 liquid of 25 | Avoids thin books and meme-coin gaps |
 
 ## 4. Fee handling
 
@@ -82,8 +110,7 @@ _Section filled in with final parameters and backtest evidence — see below._
 
 | Control | Rule |
 |---|---|
-| Regime gate | BTC below its 72h EMA with the 24h EMA below it → RISK_OFF, exposure ×0 (core only) |
-| Volatility spike | BTC 24h vol > 2× its 14-day median → exposure ×0.5 |
+| Regime gate (available, off) | BTC trend filter on the long sleeve; disabled because it added no value in testing (RESEARCH.md §2) |
 | Volatility target | gross exposure sized for ~1.2% expected portfolio daily volatility |
 | Position cap | ≤30% of equity per coin; gross ≤95%; no leverage |
 | Drawdown brake | linear de-risking from 1.5% to 4.5% drawdown from peak (down to ×0.25) |

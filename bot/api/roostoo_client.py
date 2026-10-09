@@ -129,7 +129,7 @@ class RoostooClient:
         try:
             self.on_call({
                 "method": method, "path": path, "params": safe_params,
-                "http_status": status, "success": bool(data and data.get("Success")),
+                "http_status": status, "success": bool(data is not None and data.get("Success", True)),
                 "err_msg": (data or {}).get("ErrMsg") or error,
                 "latency_ms": round(latency * 1000, 1), "attempt": attempt,
             })

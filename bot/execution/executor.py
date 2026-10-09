@@ -72,8 +72,11 @@ class OrderPlan:
 def build_portfolio(balance_resp: dict, ticker: dict, shorts_resp: Optional[dict] = None) -> Portfolio:
     wallet = balance_resp.get("SpotWallet") or balance_resp.get("Wallet") or {}
     usd = wallet.get("USD", {})
+    # USD "Lock" includes short collateral; that collateral is counted through each short's
+    # PositionValue (collateral + unrealised PnL), so exclude it here to avoid double counting.
+    locked_for_orders = float(usd.get("Lock", 0)) - float(usd.get("ShortCollateral", 0))
     pf = Portfolio(usd_free=float(usd.get("Free", 0)),
-                   usd_total=float(usd.get("Free", 0)) + float(usd.get("Lock", 0)))
+                   usd_total=float(usd.get("Free", 0)) + max(locked_for_orders, 0.0))
     for coin, bal in wallet.items():
         if coin == "USD":
             continue
@@ -110,7 +113,7 @@ class Executor:
     def snapshot(self) -> Optional[tuple]:
         t = self.client.ticker()
         b = self.client.balance()
-        sh = self.client.short_positions() if self.s.strategy.enable_shorts else {"Success": True, "Positions": []}
+        sh = self.client.short_positions() if self.s.strategy.uses_shorts else {"Success": True, "Positions": []}
         if not ok(t) or not ok(b) or not ok(sh):
             log.error("snapshot failed: ticker=%s balance=%s shorts=%s", ok(t), ok(b), ok(sh))
             return None

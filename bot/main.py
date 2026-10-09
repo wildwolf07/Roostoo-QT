@@ -48,7 +48,8 @@ class Bot:
                                     settings.runtime.max_calls_per_minute, on_call=self.db.log_api_call)
         self.data = MarketData(settings.runtime.binance_url, settings.strategy.bar_interval,
                                settings.strategy.history_bars)
-        self.risk = RiskManager(settings.risk, RiskState.from_json(self.db.get_kv("risk_state")))
+        self.risk = RiskManager(settings.risk, RiskState.from_json(self.db.get_kv("risk_state")),
+                                initial_equity=self.db.get_kv("initial_equity"))
         self.pair_info: dict = {}
         self.executor: Executor | None = None
         self.last_rebalance_hour = self.db.get_kv("last_rebalance_hour")
@@ -75,6 +76,11 @@ class Bot:
             return None
         pf, ticker = snap
         eq = pf.equity
+        if self.db.get_kv("initial_equity") is None and eq > 0:
+            # first ever observation of this account: anchor for return and CPPI floor
+            self.db.set_kv("initial_equity", eq)
+            self.risk.initial_equity = eq
+            log.info("recorded initial equity %.2f", eq)
         self.risk.update_equity(eq, now)
         dd = self.risk.drawdown(eq)
         signed = pf.signed_values()
@@ -118,7 +124,7 @@ class Bot:
         if force_daily:
             n = self.executor.rebalance(targets, deadband=0.0, reason="daily rebalance", min_order_usd=50.0)
         else:
-            n = self.executor.rebalance(targets, reason=f"hourly rebalance [{regime.label}]")
+            n = self.executor.rebalance(targets, reason=f"scheduled rebalance [{regime.label}]")
         if n:
             self.last_fill_day = now.date().isoformat()
 
@@ -145,7 +151,9 @@ class Bot:
                         today = now.date().isoformat()
                         if hour_key != self.last_rebalance_hour and now.minute >= 1:
                             force = now.hour >= 20 and self.last_fill_day != today
-                            if force or int(now.timestamp() // 3600) % self.s.strategy.rebalance_hours == 0:
+                            first_run = self.last_rebalance_hour is None
+                            scheduled = int(now.timestamp() // 3600) % self.s.strategy.rebalance_hours == 0
+                            if first_run or force or scheduled:
                                 self.hourly_step(now, pf, ticker, force_daily=force)
                             self.last_rebalance_hour = hour_key
                 self.persist()

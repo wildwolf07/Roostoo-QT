@@ -47,9 +47,12 @@ class RiskState:
 
 
 class RiskManager:
-    def __init__(self, cfg: RiskConfig, state: Optional[RiskState] = None):
+    def __init__(self, cfg: RiskConfig, state: Optional[RiskState] = None,
+                 initial_equity: Optional[float] = None):
         self.cfg = cfg
         self.state = state or RiskState()
+        # CPPI floor is relative to the account's real starting equity (persisted by the bot)
+        self.initial_equity = initial_equity or cfg.initial_equity
 
     # ----------------------------------------------------------- equity track
     def update_equity(self, equity: float, now: datetime) -> None:
@@ -79,7 +82,7 @@ class RiskManager:
             frac = (dd - c.dd_soft) / (c.dd_hard - c.dd_soft)
             dd_mult = 1.0 - frac * (1.0 - c.dd_min_mult)
 
-        floor = c.cppi_floor * c.initial_equity
+        floor = c.cppi_floor * self.initial_equity
         cushion = max(0.0, (equity - floor) / equity) if equity > 0 else 0.0
         cppi_cap = c.cppi_multiplier * cushion
         cppi_mult = 1.0 if base_gross <= 0 else min(1.0, cppi_cap / base_gross)
