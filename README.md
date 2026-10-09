@@ -18,6 +18,20 @@
 | Execution | Maker-first limit orders (0.05% fee) with market fallback; deadbands to cut turnover |
 | Autonomy | Runs 24/7 on AWS EC2 under systemd; no manual input of any kind |
 
+### Results at a glance (backtests include fees; details in [RESEARCH.md](RESEARCH.md))
+
+![Ensemble vs BTC](docs/img/equity.svg)
+
+| Period | Ensemble | BTC |
+|---|---|---|
+| 2023-01 → 2026-10 (design + out-of-sample) | **+84%, Sharpe 1.27, max DD 16.9%** | buy-and-hold with ~50% drawdowns |
+| 2021-02 → 2022-12 (never used for design) | **+19.8%, Sharpe 0.70** | **−49.2%** |
+| 14-day windows, out-of-sample | median composite 4.0; 67% of windows positive | |
+
+![Crash protection](docs/img/crashes.svg)
+
+![Breadth effect](docs/img/breadth.svg)
+
 ### Why this strategy (full evidence in [RESEARCH.md](RESEARCH.md); every change and rejected idea in [DECISIONS.md](DECISIONS.md))
 1. **Literature first, then our own data.** We reviewed the crypto return-predictability
    literature (momentum, reversal, lottery/MAX, low-volatility, betting-against-beta, funding,
