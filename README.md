@@ -1,5 +1,7 @@
 # Roostoo-QT — Risk-First Autonomous Crypto Trading Bot
 
+[![tests](https://github.com/wildwolf07/Roostoo-QT/actions/workflows/tests.yml/badge.svg)](https://github.com/wildwolf07/Roostoo-QT/actions/workflows/tests.yml)
+
 **Team150-negExp** · Autonomous crypto trading bot for the Roostoo mock exchange.
 
 > One-line thesis: the competition is scored mostly on *downside-aware* ratios
@@ -16,6 +18,7 @@
 | Universe | 25 most liquid of 29 whitelisted coins (by Roostoo 24h volume) |
 | Core idea | Equal-weight **ensemble of 4 sleeves**: (1) cross-sectional momentum long/short, beta-neutral; (2) long-only momentum; (3) *filtered* momentum (no lottery-like longs, only calm shorts); (4) low-risk long-only (low volatility / low MAX / low beta). Tranched over 3 days, volatility-targeted, wrapped in automatic drawdown controls |
 | Execution | Maker-first limit orders (0.05% fee) with market fallback; deadbands to cut turnover |
+| Risk | Volatility targeting, ≤30% per coin, ≤95% gross, no leverage, catastrophe-only drawdown brake (6–12%); stops/CPPI removed after tests showed they whipsaw |
 | Autonomy | Runs 24/7 on AWS EC2 under systemd; no manual input of any kind |
 
 ### Results at a glance (backtests include fees; details in [RESEARCH.md](RESEARCH.md))
@@ -27,6 +30,11 @@
 | 2023-01 → 2026-10 (design + out-of-sample) | **+84%, Sharpe 1.27, max DD 16.9%** | buy-and-hold with ~50% drawdowns |
 | 2021-02 → 2022-12 (never used for design) | **+19.8%, Sharpe 0.70** | **−49.2%** |
 | 14-day windows, out-of-sample | median composite 4.0; 67% of windows positive | |
+| Statistical confidence | P(true Sharpe > 0) = 99.2% (PSR); 64–71% after deflating for every variant we tried (DSR) | |
+
+We expect live performance to come in **below** the backtest. The deflated Sharpe says
+part of the backtest's 1.27 is selection luck, and every result here is conservative on fees
+(taker rate on every fill).
 
 ![Crash protection](docs/img/crashes.svg)
 
