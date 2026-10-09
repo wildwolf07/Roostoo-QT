@@ -10,6 +10,7 @@ Usage: python -m research.signal_lab
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import numpy as np
@@ -20,7 +21,8 @@ from bot.config import ROOT
 DATA = ROOT / "data" / "research"
 SPLIT = "2025-06-01"          # in-sample before, out-of-sample after
 HORIZONS = (1, 4, 8, 24, 72)
-EXCLUDE = {"PAXG", "INJ", "OP", "TON"}  # gold token; not on Roostoo; stale Binance data
+EXCLUDE = {"PAXG", "INJ", "OP", "TON", "PEPE", "SHIB"}  # gold; not on Roostoo; stale data; 18-25bp spreads
+EXCLUDE |= {c for c in os.environ.get("EXTRA_EXCLUDE", "").split(",") if c}  # ad-hoc robustness runs
 
 
 def load_panel():

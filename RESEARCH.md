@@ -125,3 +125,38 @@ Last 60 days: ensemble Sharpe 3.80, +10.3%, max DD 4.0%. Last 180 days: Sharpe 1
 backtester: **max weight difference 8e-17 (identical)**.
 
 Reproduce: `python -m research.download_full && python -m research.signal_lab && python -m research.xs_backtest`
+
+
+## v2.1: breadth, spreads, overlay and scoring (overnight study, 2026-10-10)
+
+**Risk overlay** (`research/overlay_study.py`, live logic replayed on every 14-day window):
+the original tight overlay (CPPI 96% floor, 1.5–4.5% brake, 24h limit) **reduced** the
+OOS median composite from +2.67 to −0.78. It de-risked after small dips and missed the
+rebounds (whipsaw). Replaced by a loose 2.5–7% drawdown brake (OOS +2.70, p95 drawdown
+4.9% vs 5.1% with no overlay).
+
+**Breadth** (`research/breadth_check.py`): Sharpe rises monotonically with universe size
+and is flat across 3/4/5 coins per side, as Grinold's fundamental law predicts
+(IR ∝ IC·√breadth). Without PEPE/SHIB:
+
+| Universe | Sharpe (n=3/4/5) | Return (n=4) | Max DD | OOS windows > 0 | OOS median composite |
+|---|---|---|---|---|---|
+| 15 | 0.86 / 0.89 / 0.87 | +51% | 18.2% | 62% | 3.25 |
+| 20 | 1.11 / 1.14 / 1.07 | +72% | 17.3% | 64% | 2.07 |
+| **25 (LIVE)** | **1.29 / 1.27 / 1.22** | **+84%** | **16.9%** | **67%** | **4.02** |
+| 29 | 1.39 / 1.44 / 1.37 | +101% | 16.8% | 68% | 3.80 |
+
+Calendar-year Sharpe at 25 coins: 2023 1.02, 2024 1.40, 2025 1.39, 2026 1.21.
+**PEPE and SHIB** are excluded: their tick sizes create 18–25 bp spreads on Roostoo, and
+removing them improved every universe size. We use 25 rather than all 29 because the coin
+list contains only today's survivors (**survivorship bias**), and that bias is largest for
+the smallest coins.
+
+**Execution timing** (rejected): conditioning rebalance timing on 1–4h reversal or BTC
+catch-up moves fills by only 1–2 bp, worth less than 0.1% over the contest.
+
+**Scoring and exposure** (`research/score_mc.py`, 976 eight-day OOS stretches after 6 flat
+days): the median composite is ~1.58 for 0.75×–1.6× exposure (the ratios are
+scale-invariant). More exposure raises P(return > 2%) from 19% to 24% but also raises
+P(loss > 3%) from 3% to 7.5%. Exposure stays at 1.0× unless the leaderboard shows we are
+below the top-20 cutoff.

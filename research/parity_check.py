@@ -19,10 +19,12 @@ def main() -> None:
     cfg = StrategyConfig()
     mom = (("mom_blend_168_336", 1.0),)
     research = {
-        "mom_ls": Variant("a", signals=mom, rebalance_h=24 * 30),
-        "mom_lo": Variant("b", signals=mom, long_only=True, beta_neutral=False, rebalance_h=24 * 30),
-        "mom_filtered_ls": Variant("c", signals=mom, long_max_rank=0.7, short_vol_rank=0.6, rebalance_h=24 * 30),
-        "lowrisk_lo": Variant("d", long_only=True, rebalance_h=24 * 30),
+        "mom_ls": Variant("a", signals=mom, rebalance_h=24 * 30, universe=cfg.universe_size),
+        "mom_lo": Variant("b", signals=mom, long_only=True, beta_neutral=False, rebalance_h=24 * 30,
+                          universe=cfg.universe_size),
+        "mom_filtered_ls": Variant("c", signals=mom, long_max_rank=0.7, short_vol_rank=0.6, rebalance_h=24 * 30,
+                                   universe=cfg.universe_size),
+        "lowrisk_lo": Variant("d", long_only=True, rebalance_h=24 * 30, universe=cfg.universe_size),
     }
     Ws = {k: build_weights(v, (close, qv), feats) for k, v in research.items()}
     vol24 = qv.rolling(24).sum()
@@ -33,7 +35,7 @@ def main() -> None:
         t = pd.Timestamp(t)
         i = close.index.get_loc(t)
         hist_ok = close.iloc[i - 720: i + 1].notna().all()
-        uni = [c for c in vol24.loc[t].dropna().sort_values(ascending=False).index if hist_ok.get(c, False)][:15]
+        uni = [c for c in vol24.loc[t].dropna().sort_values(ascending=False).index if hist_ok.get(c, False)][: cfg.universe_size]
         window = close.loc[:t, uni].iloc[-500:]
         f, r1 = panel_features(window)
         scores = {

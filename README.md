@@ -13,7 +13,7 @@
 | | |
 |---|---|
 | Style | Directional, low-turnover: daily rebalance of a long/short book |
-| Universe | 15 most liquid of 31 whitelisted coins (by Roostoo 24h volume) |
+| Universe | 25 most liquid of 29 whitelisted coins (by Roostoo 24h volume) |
 | Core idea | Equal-weight **ensemble of 4 sleeves**: (1) cross-sectional momentum long/short, beta-neutral; (2) long-only momentum; (3) *filtered* momentum (no lottery-like longs, only calm shorts); (4) low-risk long-only (low volatility / low MAX / low beta). Tranched over 3 days, volatility-targeted, wrapped in automatic drawdown controls |
 | Execution | Maker-first limit orders (0.05% fee) with market fallback; deadbands to cut turnover |
 | Autonomy | Runs 24/7 on AWS EC2 under systemd; no manual input of any kind |
@@ -76,7 +76,7 @@ Tech stack: Python 3.9+, `requests`, `numpy`, `pandas`, SQLite, systemd on AWS E
 - `vol72` = std of hourly log returns over 72h · `max24` = largest hourly return in 24h (lottery proxy)
 - `beta` = 336h rolling beta of hourly returns to BTC
 
-Each feature is z-scored across the 15-coin universe (clipped at ±3).
+Each feature is z-scored across the 25-coin universe (clipped at ±3).
 
 **Sleeves** (each picks 4 coins per side, inverse-volatility weights, scaled to an expected
 portfolio volatility of 1.2% per day, ≤30% per coin):
@@ -100,7 +100,7 @@ trailing stop exits immediately (with a 6h cooldown).
 | Holding / rebalance | ~3 days via 3 daily tranches | Turnover low enough to beat fees; trades every day |
 | Vol target | 1.2% / day | Best composite of 1.2 / 1.6 / 2.0% in tests |
 | Coins per side | 4 | 3 and 5 tested; 4 is the robust middle |
-| Universe | top-15 liquid of 31 | Liquidity; all coins tradable on Roostoo with Binance history |
+| Universe | top-25 liquid of 29 | Breadth: Sharpe 0.89 (15 coins) → 1.27 (25); PEPE/SHIB excluded (18–25 bp spreads) |
 
 ## 4. Fee handling
 

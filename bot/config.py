@@ -32,9 +32,9 @@ class StrategyConfig:
     whitelist: tuple = (
         "BTC", "ETH", "SOL", "BNB", "XRP", "DOGE", "ADA", "AVAX", "LINK", "SUI", "LTC", "DOT",
         "NEAR", "TRX", "UNI", "AAVE", "HBAR", "XLM", "APT", "ARB", "FET", "ENA", "ZEC", "TAO",
-        "PEPE", "SHIB", "FIL", "ICP", "CRV", "PENDLE", "WLD",
-    )
-    universe_size: int = 15            # top-N of whitelist by 24h USD volume
+        "FIL", "ICP", "CRV", "PENDLE", "WLD",
+    )   # PEPE/SHIB removed: 18-25bp tick-size spreads on Roostoo; ensemble Sharpe improved without them
+    universe_size: int = 25            # top-N of whitelist by 24h USD volume (breadth study: 15->25 lifts Sharpe 0.89->1.27)
     bar_interval: str = "1h"
     history_bars: int = 500            # hourly bars fetched for indicators (>= 336 + tranche offsets)
 
