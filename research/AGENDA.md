@@ -102,3 +102,7 @@ Ground rules
 - Robustness fixes (8b55426): Binance kline fallback hosts; cancel stale pending orders on startup.
   Shadow bot restarted on 8b55426 to mirror the 00:00 UTC (05:30 IST) live rebalance.
 - MORNING DEPLOY NEEDED: live runs 727857e; latest = catastrophe brake + robustness fixes.
+- vol-managed scaling (Moreira-Muir / Barroso-Santa-Clara): rejected (Sharpe 1.08 -> 0.73-1.00, worse 2022).
+- single-name/short-squeeze risk: worst coin-day -2.1% of equity (short XLM 2023-07-13).
+- recent regime (live config backtest): 14d -1.71% (DD 3.2%), 30d +1.08%, 60d +8.18% (SR 3.2),
+  180d +13.47% (SR 1.9). Ordinary drawdown, not a regime break; set expectations accordingly.
