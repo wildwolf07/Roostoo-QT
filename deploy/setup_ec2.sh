@@ -16,6 +16,7 @@ elif id ubuntu >/dev/null 2>&1; then RUN_USER=ubuntu
 else RUN_USER=root; fi
 
 [ -d "$APP/.git" ] || git clone "$REPO_URL" "$APP"
+cd "$APP"
 git config --global --add safe.directory "$APP" || true
 chown -R "$RUN_USER":"$RUN_USER" "$APP"
 sudo -u "$RUN_USER" python3 -m venv "$APP/.venv"
