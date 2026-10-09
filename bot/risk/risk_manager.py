@@ -108,6 +108,8 @@ class RiskManager:
     def check_stops(self, holdings_usd: dict, prices: dict, now: datetime, min_usd: float) -> list:
         """Update each position's best price since entry; return coins that hit their trailing stop.
         ``holdings_usd`` is signed: positive = long, negative = short."""
+        if not self.cfg.stops_enabled:
+            return []
         triggered = []
         for coin in list(self.state.position_highs):
             if abs(holdings_usd.get(coin, 0.0)) < min_usd:

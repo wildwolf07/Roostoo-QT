@@ -73,7 +73,7 @@ class TestRisk(unittest.TestCase):
         self.assertLess(mult, 0.5)
 
     def test_trailing_stop_triggers(self):
-        rm = RiskManager(RiskConfig(stop_vol_mult=2.5, stop_min=0.03, stop_max=0.08))
+        rm = RiskManager(RiskConfig(stops_enabled=True, stop_vol_mult=2.5, stop_min=0.03, stop_max=0.08))
         rm.state.asset_daily_vol["ETH"] = 0.02     # stop = max(3%, 2.5*2%) = 5%
         self.assertEqual(rm.check_stops({"ETH": 10_000}, {"ETH": 100.0}, NOW, 200), [])
         self.assertEqual(rm.check_stops({"ETH": 10_000}, {"ETH": 94.0}, NOW, 200), ["ETH"])
@@ -144,8 +144,13 @@ class TestShorts(unittest.TestCase):
         plans = self.ex.plan({}, pf, self.ticker, 0.02)
         self.assertEqual([(p.side, p.qty) for p in plans], [("SHORT_CLOSE", 100.0)])
 
+    def test_stops_disabled_by_default(self):
+        rm = RiskManager(RiskConfig())
+        self.assertEqual(rm.check_stops({"ETH": 10_000}, {"ETH": 100.0}, NOW, 200), [])
+        self.assertEqual(rm.check_stops({"ETH": 10_000}, {"ETH": 50.0}, NOW, 200), [])
+
     def test_short_trailing_stop(self):
-        rm = RiskManager(RiskConfig(stop_vol_mult=2.5, stop_min=0.03, stop_max=0.08))
+        rm = RiskManager(RiskConfig(stops_enabled=True, stop_vol_mult=2.5, stop_min=0.03, stop_max=0.08))
         rm.state.asset_daily_vol["SOL"] = 0.02          # 5% stop
         self.assertEqual(rm.check_stops({"SOL": -10_000}, {"SOL": 100.0}, NOW, 200), [])
         self.assertEqual(rm.check_stops({"SOL": -10_000}, {"SOL": 90.0}, NOW, 200), [])

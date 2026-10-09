@@ -96,8 +96,10 @@ class RiskConfig:
     # Rolling 24h loss limit (1.0 = disabled)
     day_loss_limit: float = 1.0
     day_loss_mult: float = 0.5
-    # Per-position trailing stop from the high since entry: disaster-only, wide enough not to
-    # trigger on ordinary noise (a 3-day holding period at ~3-6% daily coin vol)
+    # Per-position trailing stop from the best price since entry. DISABLED: research/tail_study.py
+    # showed stops cut Sharpe 1.27 -> 0.75 (IS 0.84 -> 0.35, OOS 1.98 -> 1.46) and did not lower max
+    # drawdown; the diversified ensemble lost only -2.3% on the 2025-10-10 crash (market -20.6%).
+    stops_enabled: bool = False
     stop_vol_mult: float = 4.0         # x daily vol of the asset
     stop_min: float = 0.06
     stop_max: float = 0.15
