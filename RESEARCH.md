@@ -217,3 +217,16 @@ measured the worst historical single-coin days. The worst short day cost **−2.
 (BNB). The largest short weight ever was 10%, and 95% of short weights were ≤ 5.2%. The worst
 full short-book day was −3.3%. Inverse-volatility sizing, the 30% cap and four-sleeve averaging
 keep single-name blow-ups to about 2% of equity.
+
+**Volatility-managed scaling** (Moreira & Muir 2017; Barroso & Santa-Clara 2015), with the book
+scaled daily by target ÷ realised strategy volatility (`research/vol_managed.py`, 2021–2026):
+
+| Variant | Full Sharpe | Max DD | 2022 Sharpe | Median 14d composite (2021–22 / IS / OOS) |
+|---|---|---|---|---|
+| none (live) | **1.08** | **28.3%** | −1.42 | **2.73 / 2.84** / 4.00 |
+| 7d lookback, 0.5–1.5× | 0.73 | 37.0% | −1.96 | 2.16 / 1.96 / 4.59 |
+| 14d lookback, 0.5–1.5× | 0.92 | 35.2% | −1.88 | 2.10 / 2.92 / 4.54 |
+| 7d, de-risk only (0.5–1.0×) | 1.00 | 27.5% | −1.56 | 2.63 / 2.31 / 4.65 |
+
+Rejected: the sleeves are already volatility-targeted ex ante, and re-scaling on realised
+volatility mostly adds noise (worse Sharpe and worse 2022).

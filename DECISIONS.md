@@ -29,6 +29,9 @@ committed code, deployed with `deploy/deploy.sh`.
 | Tight risk overlay (CPPI 96%, 1.5–4.5% brake, 24h limit) | Lower drawdown | Whipsaw: OOS composite −0.78 vs +2.70 |
 | Per-coin trailing stops (3–8%, 6–15%, 10–25%) | Cut losers early | Sell on noise and miss recoveries; every setting lowered Sharpe in both periods |
 | Bear filter: long-only sleeves off when BTC < 50-day average | Avoid prolonged bears (2022) | Full-period Sharpe 1.08 → 1.55, but the median 14-day composite *falls* 3.27 → 1.95 (it lags and misses rebounds). Kept as a contingency |
+| Residual (idiosyncratic) momentum | Better on 2023–26 (Sharpe 1.27 → 1.53) | Worse on unseen 2021–22 (median 14d composite 2.73 → 1.59) |
+| Volatility-managed scaling (Moreira–Muir) | Classic Sharpe booster for momentum | Full Sharpe 1.08 → 0.73–1.00, worse 2022, higher max DD |
+| End-of-contest taper removal / 2% deadband changes | Small score gains | Mixed across periods, so unchanged |
 | Higher vol target (1.6–2.0%) | Larger returns | Composite unchanged, fatter loss tail. Kept at 1.2% unless the leaderboard demands more |
 
 ## Process safeguards
