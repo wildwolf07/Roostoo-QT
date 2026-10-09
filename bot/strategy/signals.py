@@ -139,6 +139,79 @@ def target_weights(closes: pd.DataFrame, cfg: StrategyConfig, regime: Regime,
     return weights, diagnostics
 
 
+def xs_weights(closes: pd.DataFrame, cfg: StrategyConfig, regime: Regime,
+               blocked: frozenset = frozenset()) -> tuple[dict, dict]:
+    """Cross-sectional momentum: long the top ``max_positions`` scores, short the bottom
+    ``short_max_positions`` (inverse-vol weighted, equal gross per side), scaled so the
+    expected portfolio daily vol hits the target. Market exposure largely cancels, so
+    returns come from relative strength rather than market direction."""
+    scores = momentum_scores(closes, cfg)
+    pool = [c for c in scores.index if c not in blocked]
+    longs = pool[: cfg.max_positions]
+    shorts = [c for c in reversed(pool) if c not in cfg.short_exclude and c not in longs][: cfg.short_max_positions]
+    vol = hourly_vol(closes[longs + shorts], cfg.vol_lookback).replace(0, np.nan)
+    w = pd.Series(0.0, index=longs + shorts)
+    if longs:
+        il = (1.0 / vol[longs]).fillna(0)
+        w[longs] = il / il.sum() if il.sum() > 0 else 0
+    if shorts:
+        ish = (1.0 / vol[shorts]).fillna(0)
+        w[shorts] = -(ish / ish.sum()) if ish.sum() > 0 else 0
+    # optional directional tilt with the regime (0 = fully neutral)
+    tilt = cfg.xs_net_bias * (1 if regime.label == "RISK_ON" else -1 if regime.label == "RISK_OFF" else 0)
+    w[longs] *= (1 + tilt)
+    w[shorts] *= (1 - tilt)
+    w = w / max(w.abs().sum(), 1e-12)     # unit gross
+    pv = portfolio_daily_vol(closes, w)
+    gross = cfg.max_gross if not pv or np.isnan(pv) else min(cfg.max_gross, cfg.target_daily_vol / pv)
+    w = (w * gross).clip(lower=-cfg.max_weight, upper=cfg.max_weight)
+    weights = {c: float(x) for c, x in w.items() if abs(x) > 1e-6}
+    diagnostics = {
+        "style": "xs", "regime": regime.label, "regime_details": regime.details,
+        "scores": {c: round(float(v), 3) for c, v in scores.items()},
+        "longs": longs, "shorts": shorts,
+        "portfolio_daily_vol": None if not pv or np.isnan(pv) else round(pv, 5),
+        "blocked": sorted(blocked), "base_gross": round(sum(abs(v) for v in weights.values()), 4),
+    }
+    return weights, diagnostics
+
+
+def _style_weights(closes: pd.DataFrame, cfg: StrategyConfig, regime: Regime,
+                   blocked: frozenset, held: frozenset) -> tuple[dict, dict]:
+    if cfg.style == "xs":
+        return xs_weights(closes, cfg, regime, blocked)
+    trend_regime = regime if cfg.use_regime_gate else Regime(regime.label, 1.0, regime.details)
+    if cfg.style == "blend":
+        wt, dt = target_weights(closes, cfg, trend_regime, blocked, held)
+        wx, dx = xs_weights(closes, cfg, regime, blocked)
+        merged = {c: 0.5 * wt.get(c, 0.0) + 0.5 * wx.get(c, 0.0) for c in set(wt) | set(wx)}
+        return {c: v for c, v in merged.items() if abs(v) > 1e-6}, {"style": "blend", "trend": dt, "xs": dx}
+    return target_weights(closes, cfg, trend_regime, blocked, held)
+
+
+def compute_base_weights(closes: pd.DataFrame, cfg: StrategyConfig, regime: Regime,
+                         blocked: frozenset = frozenset(), held: frozenset = frozenset()) -> tuple[dict, dict]:
+    """Single entry point for bot and backtester: style dispatch + tranche averaging.
+
+    With ``tranches = k`` the target is the mean of the style weights computed on data
+    ending now, ``spacing`` hours ago, ..., ``(k-1)*spacing`` hours ago. Rebalancing daily
+    against this average is equivalent to holding k overlapping sub-portfolios that are
+    each rebalanced every ``k*spacing`` hours."""
+    k, gap = max(1, cfg.tranches), cfg.tranche_spacing_hours
+    acc: dict = {}
+    diags = []
+    for i in range(k):
+        window = closes if i == 0 else closes.iloc[: len(closes) - i * gap]
+        w, d = _style_weights(window, cfg, regime, blocked, held)
+        diags.append(d)
+        for c, v in w.items():
+            acc[c] = acc.get(c, 0.0) + v / k
+    weights = {c: v for c, v in acc.items() if abs(v) > 1e-6}
+    diag = dict(diags[0])
+    diag.update(tranches=k, base_gross=round(sum(abs(v) for v in weights.values()), 4))
+    return weights, diag
+
+
 def apply_risk(weights: dict, risk_mult: float, cfg: StrategyConfig,
                blocked: frozenset = frozenset()) -> dict:
     """Scale base weights by the risk multiplier, then keep a small core position so the

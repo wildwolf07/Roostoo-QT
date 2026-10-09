@@ -48,6 +48,16 @@ class StrategyConfig:
     max_positions: int = 4
     rebalance_hours: int = 1           # scheduled rebalance every N hours (UTC-aligned)
     hold_rank_buffer: int = 0          # hysteresis: keep a held coin while rank < max_positions + buffer
+    # "trend": regime-gated long momentum (+ optional RISK_OFF short sleeve)
+    # "xs": cross-sectional momentum, long the strongest / short the weakest, near market-neutral
+    # "blend": 50/50 average of the two styles above
+    style: str = "trend"
+    # Tranching: average the targets computed at t, t-spacing, t-2*spacing, ... so the book
+    # behaves like overlapping sub-portfolios (daily trades, slow turnover, less timing luck)
+    tranches: int = 1
+    tranche_spacing_hours: int = 24
+    xs_net_bias: float = 0.0           # xs only: net exposure tilt per regime unit (0 = neutral)
+    use_regime_gate: bool = True       # trend only: scale longs by BTC regime
     # Short sleeve: in RISK_OFF, short the weakest coins (Roostoo /v6 shorts, 0.1% fee each way)
     enable_shorts: bool = False
     short_max_positions: int = 3

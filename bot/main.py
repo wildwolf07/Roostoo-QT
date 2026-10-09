@@ -22,7 +22,7 @@ from bot.data.market_data import MarketData, select_universe
 from bot.execution.executor import Executor
 from bot.risk.risk_manager import RiskManager, RiskState, utcnow
 from bot.storage.db import Database
-from bot.strategy.signals import apply_risk, hourly_vol, market_regime, target_weights
+from bot.strategy.signals import apply_risk, compute_base_weights, hourly_vol, market_regime
 
 log = logging.getLogger("bot")
 RUNNING = True
@@ -107,7 +107,7 @@ class Bot:
         regime = market_regime(closes["BTC"], cfg)
         blocked = self.risk.blocked(now)
         held = frozenset(c for c, v in pf.values.items() if v >= self.s.execution.min_order_usd)
-        base, diag = target_weights(closes, cfg, regime, blocked, held)
+        base, diag = compute_base_weights(closes, cfg, regime, blocked, held)
         risk_mult, risk_diag = self.risk.exposure_multiplier(pf.equity, now, sum(abs(v) for v in base.values()))
         targets = apply_risk(base, risk_mult, cfg, blocked)
         diag.update(risk=risk_diag, universe=universe, targets={c: round(w, 4) for c, w in targets.items()},
@@ -145,7 +145,7 @@ class Bot:
                         today = now.date().isoformat()
                         if hour_key != self.last_rebalance_hour and now.minute >= 1:
                             force = now.hour >= 20 and self.last_fill_day != today
-                            if force or now.hour % self.s.strategy.rebalance_hours == 0:
+                            if force or int(now.timestamp() // 3600) % self.s.strategy.rebalance_hours == 0:
                                 self.hourly_step(now, pf, ticker, force_daily=force)
                             self.last_rebalance_hour = hour_key
                 self.persist()

@@ -1,4 +1,4 @@
-# Regime-Gated Volatility-Targeted Trend Bot — Roostoo APAC Quant Hackathon
+# Roostoo-QT — Risk-First Autonomous Crypto Trading Bot
 
 **Team150-negExp** · Autonomous crypto trading bot for the Roostoo mock exchange.
 

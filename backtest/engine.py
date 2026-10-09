@@ -20,7 +20,7 @@ import pandas as pd
 from bot.config import ROOT, RiskConfig, StrategyConfig
 from bot.metrics import summary
 from bot.risk.risk_manager import RiskManager
-from bot.strategy.signals import apply_risk, hourly_vol, market_regime, target_weights
+from bot.strategy.signals import apply_risk, compute_base_weights, hourly_vol, market_regime
 
 DATA = ROOT / "data" / "klines"
 
@@ -63,7 +63,7 @@ def run(start: str, end: str, scfg: StrategyConfig = StrategyConfig(), rcfg: Ris
         now = t.to_pydatetime().replace(tzinfo=timezone.utc)
         risk.update_equity(equity, now)
 
-        rebalance_now = t.hour % scfg.rebalance_hours == 0
+        rebalance_now = int(t.timestamp() // 3600) % scfg.rebalance_hours == 0
         # trailing stops on hourly closes
         stops = risk.check_stops(values, px.to_dict(), now, min_order)
         target_override = {}
@@ -82,7 +82,7 @@ def run(start: str, end: str, scfg: StrategyConfig = StrategyConfig(), rcfg: Ris
 
         regime = market_regime(win["BTC"], scfg)
         blocked = risk.blocked(now)
-        base, _ = target_weights(win, scfg, regime, blocked, frozenset(c for c, v in values.items() if v >= min_order))
+        base, _ = compute_base_weights(win, scfg, regime, blocked, frozenset(c for c, v in values.items() if v >= min_order))
         mult, _ = risk.exposure_multiplier(equity, now, sum(base.values()))
         targets = apply_risk(base, mult, scfg, blocked)
         if not rebalance_now:

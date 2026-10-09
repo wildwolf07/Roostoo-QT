@@ -45,14 +45,15 @@ def evaluate(args):
 
 
 def grid():
-    configs = []
-    for rb, npos, shorts, db in itertools.product([4, 8], [3, 5], [False, True], [0.03]):
-        lb = (72, 168, 336)
-        name = f"rb{rb}_n{npos}_shorts{int(shorts)}_db{db}"
-        configs.append((name, {"rebalance_hours": rb, "mom_lookbacks": lb, "max_positions": npos,
-                               "min_gross": 0.0, "history_bars": 420, "enable_shorts": shorts},
-                        {"deadband": db}))
-    return configs
+    base = {"min_gross": 0.0, "history_bars": 500, "mom_lookbacks": (168, 336),
+            "rebalance_hours": 24, "tranches": 3, "tranche_spacing_hours": 24, "use_regime_gate": False}
+    return [
+        ("trend_n5_tranched", {**base, "style": "trend", "max_positions": 5}, {"deadband": 0.02}),
+        ("xs_n3_tranched", {**base, "style": "xs", "max_positions": 3, "short_max_positions": 3}, {"deadband": 0.02}),
+        ("blend_n4_tranched", {**base, "style": "blend", "max_positions": 4, "short_max_positions": 3}, {"deadband": 0.02}),
+        ("blend_n4_tranched_vt15", {**base, "style": "blend", "max_positions": 4, "short_max_positions": 3,
+                                    "target_daily_vol": 0.015}, {"deadband": 0.02}),
+    ]
 
 
 if __name__ == "__main__":
