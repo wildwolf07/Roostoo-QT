@@ -77,6 +77,11 @@ class Database:
              reason, json.dumps(resp)[:2000] if resp else None),
         )
 
+    def update_order(self, order_id: str, status: str, filled_qty, avg_price, commission) -> None:
+        """Record the final outcome of an order (e.g. a resting LIMIT that later filled)."""
+        self._exec("UPDATE orders SET status=?, filled_qty=?, avg_price=?, commission=? WHERE order_id=?",
+                   (status, filled_qty, avg_price, commission, str(order_id)))
+
     def log_equity(self, equity: float, usd: float, gross: float, dd: float, holdings: dict) -> None:
         self._exec("INSERT INTO equity VALUES (?,?,?,?,?,?)",
                    (_now(), equity, usd, gross, dd, json.dumps(holdings)))

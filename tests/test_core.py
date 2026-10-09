@@ -161,5 +161,32 @@ class TestShorts(unittest.TestCase):
         self.assertTrue(all(v >= 0 for v in w_on.values()))
 
 
+class TestEnsemble(unittest.TestCase):
+    def setUp(self):
+        coins = ["BTC", "ETH", "SOL", "BNB", "XRP", "ADA", "DOGE", "LINK", "AVAX", "DOT", "LTC", "TRX"]
+        drifts = np.linspace(0.002, -0.002, len(coins))
+        self.closes = trending_closes(n=500, coins=coins, drift=tuple(drifts), seed=3)
+
+    def test_ensemble_weights_are_bounded_and_mixed(self):
+        from bot.strategy.signals import ensemble_weights
+        cfg = StrategyConfig()
+        w, diag = ensemble_weights(self.closes, cfg)
+        self.assertTrue(w)
+        self.assertTrue(all(np.isfinite(v) for v in w.values()))
+        self.assertLessEqual(sum(abs(v) for v in w.values()), cfg.max_gross + 1e-9)
+        self.assertTrue(any(v > 0 for v in w.values()) and any(v < 0 for v in w.values()))
+        self.assertEqual(set(diag["sleeves"]), {"mom_ls", "mom_lo", "mom_filtered_ls", "lowrisk_lo"})
+        # strongest uptrend is long in the momentum sleeves, strongest downtrend is shorted there;
+        # sleeves may net against each other (e.g. low-risk sleeve buying a calm downtrend coin)
+        self.assertGreater(diag["sleeves"]["mom_lo"].get("BTC", 0), 0)
+        self.assertLess(diag["sleeves"]["mom_ls"].get("TRX", 0), 0)
+        self.assertTrue(all(v > 0 for v in diag["sleeves"]["lowrisk_lo"].values()))
+
+    def test_blocked_coins_are_excluded(self):
+        from bot.strategy.signals import ensemble_weights
+        w, _ = ensemble_weights(self.closes, StrategyConfig(), blocked=frozenset({"ETH"}))
+        self.assertNotIn("ETH", w)
+
+
 if __name__ == "__main__":
     unittest.main()

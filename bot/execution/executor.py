@@ -239,6 +239,19 @@ class Executor:
             r = self.client.cancel_order(order_id=oid)
             self.db.log_decision("cancel_unfilled_limit", {"order_id": oid, "resp": r})
 
+    def reconcile_orders(self, limit: int = 30) -> dict:
+        """Write final status / fill price / fee of recent orders into the audit log (1 API call)."""
+        resp = self.client.query_order(limit=limit)
+        counts: dict = {}
+        for o in (resp or {}).get("OrderMatched", []) or []:
+            status = o.get("Status", "")
+            filled = o.get("FilledQuantity") if status == "FILLED" else 0
+            self.db.update_order(str(o.get("OrderID")), status, filled, o.get("FilledAverPrice"),
+                                 o.get("CommissionChargeValue"))
+            key = f"{o.get('Type')}/{o.get('Role')}/{status}"
+            counts[key] = counts.get(key, 0) + 1
+        return counts
+
     def _fit_to_cash(self, plans: list, pf: Portfolio, ticker: dict) -> list:
         """Scale risk-adding orders so their USD need fits free cash (no leverage)."""
         def usd(p: OrderPlan) -> float:
@@ -307,6 +320,17 @@ class Executor:
         deadband = self.cfg.deadband_frac if deadband is None else deadband
         n = self._execute_group(REDUCE, targets, deadband, reason, urgent, min_order_usd)
         n += self._execute_group(ADD, targets, deadband, reason, urgent, min_order_usd)
+        if n and self.s.can_trade:
+            counts = self.reconcile_orders()
+            snap = self.snapshot()
+            if snap:
+                pf, _ = snap
+                cur = pf.weights()
+                err = sum(abs(targets.get(c, 0.0) - cur.get(c, 0.0)) for c in set(targets) | set(cur))
+                log.info("rebalance complete: %d orders, equity %.2f, gross %.1f%%, tracking error %.2f%%, fills %s",
+                         n, pf.equity, 100 * sum(abs(w) for w in cur.values()), 100 * err, counts)
+                self.db.log_decision("rebalance_complete", {"orders": n, "equity": pf.equity,
+                                                            "tracking_error": err, "fills": counts})
         return n
 
     def exit_positions(self, coins: list, reason: str) -> int:

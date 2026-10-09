@@ -176,8 +176,98 @@ def xs_weights(closes: pd.DataFrame, cfg: StrategyConfig, regime: Regime,
     return weights, diagnostics
 
 
+def _zscore(s: pd.Series) -> pd.Series:
+    s = s.dropna()
+    if len(s) < 3 or s.std() == 0:
+        return s * 0
+    return ((s - s.mean()) / s.std()).clip(-3, 3)
+
+
+def panel_features(closes: pd.DataFrame) -> tuple[dict, pd.DataFrame]:
+    """Latest-bar features used by the ensemble (identical formulas to research/signal_lab.py)."""
+    logp = np.log(closes)
+    r1 = logp.diff()
+    vol = r1.rolling(72, min_periods=48).std()
+    mom = ((logp - logp.shift(168)) / (vol * math.sqrt(168))
+           + (logp - logp.shift(336)) / (vol * math.sqrt(336))) / 2
+    maxr = r1.rolling(24).max()
+    btc = r1["BTC"]
+    beta = r1.rolling(336, min_periods=168).cov(btc).div(btc.rolling(336, min_periods=168).var(), axis=0)
+    feats = {"mom": mom.iloc[-1], "vol": vol.iloc[-1], "max": maxr.iloc[-1], "beta": beta.iloc[-1]}
+    return feats, r1
+
+
+def sleeve_weights(r1: pd.DataFrame, feats: dict, score: pd.Series, cfg: StrategyConfig, long_only: bool,
+                   beta_neutral: bool = True, long_max_rank: float = 1.0,
+                   short_vol_rank: float = 1.0) -> dict:
+    """One sleeve: pick longs/shorts from ``score``, inverse-vol weight each side, make the
+    short leg's BTC-beta equal the long leg's (beta-neutral), scale to the daily vol target."""
+    uni = list(score.index)
+    score = score.dropna().sort_values(ascending=False)
+    max_pct = feats["max"][uni].rank(pct=True)
+    vol_pct = feats["vol"][uni].rank(pct=True)
+    long_pool = [c for c in score.index if max_pct.get(c, 0) <= long_max_rank]
+    short_pool = [c for c in score.index[::-1] if vol_pct.get(c, 1) <= short_vol_rank]
+    n = cfg.ensemble_n
+    longs = long_pool[:n]
+    shorts = [] if long_only else [c for c in short_pool if c not in longs][:n]
+    if not longs:
+        return {}
+    win = r1.iloc[-169:][longs + shorts]
+    sd = win.std().replace(0, np.nan)
+    w = pd.Series(0.0, index=longs + shorts)
+    wl = 1 / sd[longs]
+    w[longs] = wl / wl.sum()
+    if shorts:
+        ws = 1 / sd[shorts]
+        w[shorts] = -(ws / ws.sum())
+        if beta_neutral:
+            beta = feats["beta"][longs + shorts].fillna(1.0).clip(0.2, 3)
+            bl, bs = (w[longs] * beta[longs]).sum(), (-w[shorts] * beta[shorts]).sum()
+            if bl > 0 and bs > 0:
+                w[shorts] *= bl / bs
+    w = w / w.abs().sum()
+    cov = win.fillna(0).cov().values
+    pv = float(np.sqrt(max(w.values @ cov @ w.values, 1e-12) * 24))
+    gross = min(cfg.max_gross, cfg.target_daily_vol / pv)
+    w = (w * gross).clip(-cfg.max_weight, cfg.max_weight)
+    return {c: float(x) for c, x in w.items() if abs(x) > 1e-9 and not np.isnan(x)}
+
+
+def ensemble_weights(closes: pd.DataFrame, cfg: StrategyConfig, blocked: frozenset = frozenset()) -> tuple[dict, dict]:
+    """Equal-weight ensemble of four sleeves (evidence: research/xs_backtest.py, RESEARCH.md):
+      1. cross-sectional momentum, long/short, beta-neutral
+      2. long-only momentum
+      3. filtered momentum: longs exclude lottery-like coins, shorts only calm coins
+      4. low-risk long-only: low volatility, low MAX, low beta (lottery / BAB anomalies)
+    """
+    feats, r1 = panel_features(closes)
+    uni = [c for c in closes.columns if c not in blocked and closes[c].iloc[-337:].notna().all()]
+    mom = _zscore(feats["mom"][uni])
+    lowrisk = (-_zscore(feats["vol"][uni])).add(-_zscore(feats["max"][uni]), fill_value=0) \
+        .add(-_zscore(feats["beta"][uni]), fill_value=0)
+    sleeves = {
+        "mom_ls": sleeve_weights(r1, feats, mom, cfg, long_only=False),
+        "mom_lo": sleeve_weights(r1, feats, mom, cfg, long_only=True),
+        "mom_filtered_ls": sleeve_weights(r1, feats, mom, cfg, long_only=False,
+                                          long_max_rank=cfg.lottery_max_rank, short_vol_rank=cfg.short_vol_rank),
+        "lowrisk_lo": sleeve_weights(r1, feats, lowrisk, cfg, long_only=True),
+    }
+    acc: dict = {}
+    for w in sleeves.values():
+        for c, x in w.items():
+            acc[c] = acc.get(c, 0.0) + x / len(sleeves)
+    diag = {"style": "ensemble", "universe": uni,
+            "sleeves": {k: {c: round(x, 4) for c, x in v.items()} for k, v in sleeves.items()},
+            "mom_z": {c: round(float(x), 2) for c, x in mom.sort_values(ascending=False).items()},
+            "lowrisk_z": {c: round(float(x), 2) for c, x in lowrisk.sort_values(ascending=False).items()}}
+    return {c: x for c, x in acc.items() if abs(x) > 1e-6}, diag
+
+
 def _style_weights(closes: pd.DataFrame, cfg: StrategyConfig, regime: Regime,
                    blocked: frozenset, held: frozenset) -> tuple[dict, dict]:
+    if cfg.style == "ensemble":
+        return ensemble_weights(closes, cfg, blocked)
     if cfg.style == "xs":
         return xs_weights(closes, cfg, regime, blocked)
     trend_regime = regime if cfg.use_regime_gate else Regime(regime.label, 1.0, regime.details)

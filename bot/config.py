@@ -30,11 +30,11 @@ class StrategyConfig:
     # Universe: liquid crypto majors that also trade on Binance (for OHLCV history).
     # Tokenized stocks and thin meme coins are excluded on purpose.
     whitelist: tuple = (
-        "BTC", "ETH", "SOL", "BNB", "XRP", "DOGE", "ADA", "AVAX", "LINK",
-        "SUI", "LTC", "DOT", "NEAR", "TRX", "UNI", "AAVE", "HBAR", "XLM",
-        "APT", "ARB", "FET", "ENA", "ZEC", "TAO", "PAXG",
+        "BTC", "ETH", "SOL", "BNB", "XRP", "DOGE", "ADA", "AVAX", "LINK", "SUI", "LTC", "DOT",
+        "NEAR", "TRX", "UNI", "AAVE", "HBAR", "XLM", "APT", "ARB", "FET", "ENA", "ZEC", "TAO",
+        "PEPE", "SHIB", "FIL", "ICP", "CRV", "PENDLE", "WLD",
     )
-    universe_size: int = 12            # top-N of whitelist by 24h USD volume
+    universe_size: int = 15            # top-N of whitelist by 24h USD volume
     bar_interval: str = "1h"
     history_bars: int = 500            # hourly bars fetched for indicators (>= 336 + tranche offsets)
 
@@ -51,7 +51,11 @@ class StrategyConfig:
     # "trend": regime-gated long momentum (+ optional RISK_OFF short sleeve)
     # "xs": cross-sectional momentum, long the strongest / short the weakest, near market-neutral
     # "blend": 50/50 average of the two styles above
-    style: str = "blend"
+    # "ensemble": 4 equal sleeves (momentum L/S, momentum long, filtered momentum L/S, low-risk long)
+    style: str = "ensemble"
+    ensemble_n: int = 4                # coins per side in each ensemble sleeve
+    lottery_max_rank: float = 0.7      # filtered sleeve: longs must rank <= 70th pct on 24h MAX return
+    short_vol_rank: float = 0.6        # filtered sleeve: shorts must rank <= 60th pct on volatility
     # Tranching: average the targets computed at t, t-spacing, t-2*spacing, ... so the book
     # behaves like overlapping sub-portfolios (daily trades, slow turnover, less timing luck)
     tranches: int = 3
@@ -66,7 +70,7 @@ class StrategyConfig:
 
     @property
     def uses_shorts(self) -> bool:
-        return self.enable_shorts or self.style in ("xs", "blend")
+        return self.enable_shorts or self.style in ("xs", "blend", "ensemble")
 
     # Sizing
     target_daily_vol: float = 0.012    # portfolio daily vol target (1.2%)

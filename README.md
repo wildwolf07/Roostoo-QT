@@ -13,26 +13,27 @@
 | | |
 |---|---|
 | Style | Directional, low-turnover: daily rebalance of a long/short book |
-| Universe | 12 most liquid of 25 whitelisted crypto majors (by Roostoo 24h volume) |
-| Core idea | 50/50 blend of (a) long-only 7–14 day momentum and (b) market-neutral cross-sectional momentum (long strongest / short weakest), tranched over 3 days, volatility-targeted, wrapped in automatic drawdown controls |
+| Universe | 15 most liquid of 31 whitelisted coins (by Roostoo 24h volume) |
+| Core idea | Equal-weight **ensemble of 4 sleeves**: (1) cross-sectional momentum long/short, beta-neutral; (2) long-only momentum; (3) *filtered* momentum (no lottery-like longs, only calm shorts); (4) low-risk long-only (low volatility / low MAX / low beta). Tranched over 3 days, volatility-targeted, wrapped in automatic drawdown controls |
 | Execution | Maker-first limit orders (0.05% fee) with market fallback; deadbands to cut turnover |
 | Autonomy | Runs 24/7 on AWS EC2 under systemd; no manual input of any kind |
 
 ### Why this strategy (full evidence in [RESEARCH.md](RESEARCH.md))
-1. **Measured, not assumed.** Our first design (fast hourly trend + BTC regime gate) lost
-   money in 69 two-week backtests. Diagnosing it showed that **short-horizon returns
-   mean-revert** while **7–14 day relative strength persists**, so we rebuilt around the
-   slow signal.
-2. **Two weakly-correlated sleeves.** Long-only momentum earns in up-trends; the
-   market-neutral long/short sleeve earns from dispersion between coins regardless of
-   direction. Blending them gave the **lowest drawdown** of every candidate.
-3. **Volatility targeting smooths returns.** Exposure is sized for a constant expected
-   portfolio volatility, which directly helps Sharpe and Sortino.
-4. **Calmar = return / max drawdown.** Automatic drawdown brakes cap the denominator.
-5. **Fees are the silent killer.** Fees were the largest drag in v0, so turnover control
-   (daily tranching, deadbands, maker orders) is a first-class design goal.
-
----
+1. **Literature first, then our own data.** We reviewed the crypto return-predictability
+   literature (momentum, reversal, lottery/MAX, low-volatility, betting-against-beta, funding,
+   order flow, lead-lag, seasonality) and tested every effect on 3.8 years of hourly data for
+   the 31 coins tradable on Roostoo, with a strict in-sample / out-of-sample split.
+2. **What survived costs.** Short-horizon effects (reversal, BTC lead-lag) are statistically
+   strong (t > 10) but smaller than fees. Medium-term **momentum** and the **low-risk anomaly**
+   survive costs at a ~3-day holding period.
+3. **IC is not P&L.** Shorting high-volatility "lottery" coins loses money despite a strongly
+   negative IC (rare pumps dominate), so low-risk is harvested **long-only**, and the filtered
+   momentum sleeve only shorts *calm* losers.
+4. **Diversify across regimes.** Momentum works in the current regime; low-risk works across
+   regimes. The equal-weight ensemble had the best Sharpe (0.73), lowest drawdown and was
+   positive in **every** year from 2023 to 2026 (fees included).
+5. **Fees are the silent killer.** Tranching, deadbands, sleeve netting and maker-first orders
+   keep turnover at ~0.18× equity per day.
 
 ## 2. Architecture
 
@@ -59,7 +60,8 @@
 | `bot/execution/executor.py` | Targets → orders, precision rounding, deadbands, maker-first with market fallback |
 | `bot/storage/db.py` | SQLite audit trail: every API call, order (with reason), decision, equity snapshot |
 | `bot/main.py` | Autonomous scheduler loop with crash recovery and persisted state |
-| `backtest/` | Data download, hourly backtester (same strategy code), 14-day window parameter study |
+| `backtest/` | Event-driven hourly backtester (same strategy code as live), 14-day window parameter study |
+| `research/` | 2023→now data download (spot, order flow, funding, premium), signal lab (rank-IC in/out-of-sample), vectorised portfolio backtester, live/research parity check |
 | `tests/` | Unit tests for signing, signals, risk rules and order planning |
 | `deploy/` | EC2 setup, systemd unit, commit-based deploy script |
 
@@ -69,32 +71,36 @@ Tech stack: Python 3.9+, `requests`, `numpy`, `pandas`, SQLite, systemd on AWS E
 
 ## 3. Strategy explanation
 
-**Signal.** For each coin: `score = mean over L in {168h, 336h} of log_return(L) / (hourly_vol × √L)`,
-a t-statistic-like trend strength that is comparable across coins of different volatility.
+**Features** (hourly bars, computed identically in research and live):
+- `mom` = average of 168h and 336h log returns, each divided by `vol72 × √L` (risk-adjusted trend)
+- `vol72` = std of hourly log returns over 72h · `max24` = largest hourly return in 24h (lottery proxy)
+- `beta` = 336h rolling beta of hourly returns to BTC
 
-**Sleeve A: trend (long-only).** Hold the top 4 coins with positive score, weighted by
-inverse volatility, scaled so the sleeve's expected daily volatility ≈ 1.2%.
+Each feature is z-scored across the 15-coin universe (clipped at ±3).
 
-**Sleeve B: cross-sectional (market-neutral).** Long the top 4 scores, short the bottom 3
-(via Roostoo `/v6` shorts), inverse-vol weighted, equal gross per side, same vol target.
+**Sleeves** (each picks 4 coins per side, inverse-volatility weights, scaled to an expected
+portfolio volatility of 1.2% per day, ≤30% per coin):
+| Sleeve | Long | Short | Notes |
+|---|---|---|---|
+| 1. Momentum L/S | top-4 `mom` | bottom-4 `mom` | short leg scaled so its BTC-beta equals the long leg's (beta-neutral) |
+| 2. Momentum long | top-4 `mom` | none | carries the trend premium |
+| 3. Filtered momentum L/S | top-4 `mom` among coins with `max24` rank ≤ 70% | bottom-4 `mom` among coins with `vol72` rank ≤ 60% | avoids lottery longs and pump-prone shorts |
+| 4. Low-risk long | top-4 of −z(`vol72`) − z(`max24`) − z(`beta`) | none | lottery / low-vol / BAB anomalies |
 
-**Blend and tranching.** Target = average of (A + B)/2 computed on data ending now, 24h
-ago and 48h ago. That equals three overlapping sub-portfolios, each held ~3 days, so the
-bot trades daily while keeping turnover low and reducing timing luck.
+**Combination and timing.** Target = mean of the 4 sleeves, averaged over targets computed
+now, 24h ago and 48h ago (3 tranches, each held about 3 days). Rebalanced daily at 00:00 UTC.
+Gaps below 2% of equity are skipped. Shorts use Roostoo `/v6` (fully collateralised, no leverage).
 
-**Entry / exit.** A coin enters when it ranks in the selected set and leaves when it drops
-out, or immediately if its trailing stop triggers. A new rebalance runs daily at 00:00 UTC.
-Gaps below 2% of equity are ignored (deadband).
-
-**Position sizing.** Inverse volatility × vol target × risk multiplier, capped at 30% per
-coin and 95% gross. There is never leverage: shorts are fully collateralised in USD.
+**Entry / exit.** A coin enters or leaves as its sleeve membership changes. The per-position
+trailing stop exits immediately (with a 6h cooldown).
 
 | Key parameter | Value | Why |
 |---|---|---|
-| Lookbacks | 168h, 336h | Positive IC at 1–3 day horizons; short lookbacks mean-revert |
-| Rebalance | daily, 3 tranches | Daily activity with ~3-day holding period |
-| Vol target | 1.2% / day | Smooth equity curve; 1.5% tested worse |
-| Universe | top-12 liquid of 25 | Avoids thin books and meme-coin gaps |
+| Momentum lookbacks | 168h, 336h | Positive IC at 1–3 day horizons; short lookbacks mean-revert |
+| Holding / rebalance | ~3 days via 3 daily tranches | Turnover low enough to beat fees; trades every day |
+| Vol target | 1.2% / day | Best composite of 1.2 / 1.6 / 2.0% in tests |
+| Coins per side | 4 | 3 and 5 tested; 4 is the robust middle |
+| Universe | top-15 liquid of 31 | Liquidity; all coins tradable on Roostoo with Binance history |
 
 ## 4. Fee handling
 
@@ -132,11 +138,12 @@ python -m bot.main --mode paper --once   # one dry-run decision cycle
 python -m bot.main                       # run continuously (MODE from .env)
 ```
 
-Backtest:
+Research and backtests:
 ```bash
-python -m backtest.data_download --days 540
-python -m backtest.engine --windows
-python -m backtest.sweep
+python -m research.download_full        # 2023 -> now, ~30 coins (spot + funding + premium)
+python -m research.signal_lab           # which signals predict returns (IC, in/out-of-sample)
+python -m research.xs_backtest          # portfolio variants, fees included, 14-day windows
+python -m research.parity_check         # live code == research code
 ```
 
 Deploy on EC2 (Session Manager shell):
