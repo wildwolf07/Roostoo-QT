@@ -98,3 +98,7 @@ Ground rules
 - deadband (research/deadband_study.py): 0% Sharpe 1.27 (IS 0.84 / OOS 1.97), comp 1.84/4.02;
   2% (live) 1.21 (0.91 / 1.72), comp 4.64/3.00; tracking error 13% of equity at 2%. Mixed
   (IS better, OOS worse) => NO CHANGE.
+- CI added (GitHub Actions, py3.9 + 3.12): first run green (7aba1d1). README: badge, PSR/DSR, risk row.
+- Robustness fixes (8b55426): Binance kline fallback hosts; cancel stale pending orders on startup.
+  Shadow bot restarted on 8b55426 to mirror the 00:00 UTC (05:30 IST) live rebalance.
+- MORNING DEPLOY NEEDED: live runs 727857e; latest = catastrophe brake + robustness fixes.
