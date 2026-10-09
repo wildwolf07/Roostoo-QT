@@ -94,3 +94,7 @@ Ground rules
 - next: deflated Sharpe ratio for the live ensemble given all trials run.
 - DSR (live 25-coin ensemble): PSR 0.992; DSR 0.711 (N=42), 0.637 (N=80), 0.565 (N=150).
   Found and fixed: ensemble_returns() used universe 15; overlay/score_mc re-running at universe 25.
+- overlay @ u25: catastrophe brake 6-12% adopted (commit 39a452d). Taper unchanged (mixed).
+- deadband (research/deadband_study.py): 0% Sharpe 1.27 (IS 0.84 / OOS 1.97), comp 1.84/4.02;
+  2% (live) 1.21 (0.91 / 1.72), comp 4.64/3.00; tracking error 13% of equity at 2%. Mixed
+  (IS better, OOS worse) => NO CHANGE.

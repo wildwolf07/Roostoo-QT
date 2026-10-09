@@ -205,3 +205,8 @@ A **catastrophe-only 6–12% brake** gives 2.32 / 5.00 (same as none) and lowers
 taper: IS favours it (1.35 vs 1.22), OOS does not (2.86 vs 3.28), so it is unchanged.
 Exposure at 25 coins: the median composite is flat at ~3.3 for 0.75×–1.6×; P(return > 2%)
 is 21% at 1.0× and 27% at 1.33×; P(loss > 3%) is 3.5% and 5.8%.
+
+**Execution deadband** (`research/deadband_study.py`): the live executor skips trades under 2%
+of equity, so small targets are never opened (average |held − target| is 13% of equity). Against
+trading every change: Sharpe 1.21 vs 1.27, IS composite 4.64 vs 1.84, OOS 3.00 vs 4.02. The
+evidence is mixed across periods, so the deadband is unchanged (it also cuts turnover 0.196 → 0.138).
