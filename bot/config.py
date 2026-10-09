@@ -83,20 +83,24 @@ class StrategyConfig:
 @dataclass(frozen=True)
 class RiskConfig:
     initial_equity: float = 100_000.0
+    # Settings chosen by research/overlay_study.py: tight brakes (CPPI 96% floor, 1.5-4.5% brake,
+    # 24h limit) whipsawed - cut exposure after small dips and missed rebounds (OOS median
+    # composite -0.78 vs +2.70 for the loose brake below). Keep only a loose disaster brake.
     # Drawdown brake: linear de-risking between these drawdowns from peak.
-    dd_soft: float = 0.015
-    dd_hard: float = 0.045
+    dd_soft: float = 0.025
+    dd_hard: float = 0.07
     dd_min_mult: float = 0.25
-    # CPPI-style cap: max gross = multiplier * cushion above floor.
-    cppi_floor: float = 0.96           # fraction of initial equity
+    # CPPI-style cap: max gross = multiplier * cushion above floor (floor 0 = disabled).
+    cppi_floor: float = 0.0            # fraction of initial equity
     cppi_multiplier: float = 15.0
-    # Rolling 24h loss limit
-    day_loss_limit: float = 0.015
+    # Rolling 24h loss limit (1.0 = disabled)
+    day_loss_limit: float = 1.0
     day_loss_mult: float = 0.5
-    # Per-position trailing stop from the high since entry
-    stop_vol_mult: float = 2.5         # x daily vol of the asset
-    stop_min: float = 0.03
-    stop_max: float = 0.08
+    # Per-position trailing stop from the high since entry: disaster-only, wide enough not to
+    # trigger on ordinary noise (a 3-day holding period at ~3-6% daily coin vol)
+    stop_vol_mult: float = 4.0         # x daily vol of the asset
+    stop_min: float = 0.06
+    stop_max: float = 0.15
     stop_cooldown_hours: int = 6
     # End-of-competition taper (UTC)
     taper_start: datetime = datetime(2026, 10, 16, 12, 0, tzinfo=timezone.utc)

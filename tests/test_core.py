@@ -59,21 +59,21 @@ class TestSignals(unittest.TestCase):
 
 class TestRisk(unittest.TestCase):
     def test_drawdown_brake_reduces_exposure(self):
-        rm = RiskManager(RiskConfig())
+        rm = RiskManager(RiskConfig(dd_soft=0.015, dd_hard=0.045))
         rm.update_equity(105_000, NOW - timedelta(hours=30))
         full, _ = rm.exposure_multiplier(105_000, NOW, 0.5)
         hurt, _ = rm.exposure_multiplier(100_000, NOW, 0.5)   # ~4.8% drawdown
         self.assertEqual(full, 1.0)
-        self.assertLessEqual(hurt, RiskConfig().dd_min_mult + 1e-9)
+        self.assertLessEqual(hurt, 0.25 + 1e-9)
 
     def test_cppi_limits_gross_near_floor(self):
-        rm = RiskManager(RiskConfig())
+        rm = RiskManager(RiskConfig(cppi_floor=0.96))
         rm.update_equity(97_000, NOW)
         mult, d = rm.exposure_multiplier(97_000, NOW, 0.9)
         self.assertLess(mult, 0.5)
 
     def test_trailing_stop_triggers(self):
-        rm = RiskManager(RiskConfig())
+        rm = RiskManager(RiskConfig(stop_vol_mult=2.5, stop_min=0.03, stop_max=0.08))
         rm.state.asset_daily_vol["ETH"] = 0.02     # stop = max(3%, 2.5*2%) = 5%
         self.assertEqual(rm.check_stops({"ETH": 10_000}, {"ETH": 100.0}, NOW, 200), [])
         self.assertEqual(rm.check_stops({"ETH": 10_000}, {"ETH": 94.0}, NOW, 200), ["ETH"])
@@ -145,7 +145,7 @@ class TestShorts(unittest.TestCase):
         self.assertEqual([(p.side, p.qty) for p in plans], [("SHORT_CLOSE", 100.0)])
 
     def test_short_trailing_stop(self):
-        rm = RiskManager(RiskConfig())
+        rm = RiskManager(RiskConfig(stop_vol_mult=2.5, stop_min=0.03, stop_max=0.08))
         rm.state.asset_daily_vol["SOL"] = 0.02          # 5% stop
         self.assertEqual(rm.check_stops({"SOL": -10_000}, {"SOL": 100.0}, NOW, 200), [])
         self.assertEqual(rm.check_stops({"SOL": -10_000}, {"SOL": 90.0}, NOW, 200), [])
