@@ -61,12 +61,19 @@ class Database:
 
     def log_order(self, mode: str, pair: str, side: str, otype: str, qty: float,
                   price: Optional[float], reason: str, resp: Optional[dict]) -> None:
-        d = (resp or {}).get("OrderDetail", {}) if resp else {}
+        d = (resp.get("OrderDetail") or resp) if resp else {}   # spot vs /v6 short responses
+        if not resp:
+            status = "PAPER" if mode == "paper" else "NO_RESPONSE"
+        elif not resp.get("Success"):
+            status = "REJECTED"
+        else:
+            status = d.get("Status") or ("CLOSED" if side == "SHORT_CLOSE" else "FILLED")
         self._exec(
             "INSERT INTO orders VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            (_now(), mode, pair, side, otype, qty, price, str(d.get("OrderID", "")),
-             d.get("Status") or ("REJECTED" if resp else "NO_RESPONSE"),
-             d.get("FilledQuantity"), d.get("FilledAverPrice"), d.get("CommissionChargeValue"),
+            (_now(), mode, pair, side, otype, qty, price, str(d.get("OrderID") or d.get("ID") or ""),
+             status, d.get("FilledQuantity") or d.get("ShortQty") or d.get("ClosedQty"),
+             d.get("FilledAverPrice") or d.get("EntryPrice") or d.get("ClosePrice"),
+             d.get("CommissionChargeValue") or d.get("OpenFee") or d.get("CloseFee"),
              reason, json.dumps(resp)[:2000] if resp else None),
         )
 

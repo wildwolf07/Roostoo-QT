@@ -39,7 +39,7 @@ def load_data(coins) -> tuple[pd.DataFrame, pd.DataFrame]:
 
 
 def run(start: str, end: str, scfg: StrategyConfig = StrategyConfig(), rcfg: RiskConfig = RiskConfig(),
-        fee: float = 0.001, slippage: float = 0.0002, deadband: float = 0.02, min_order: float = 200.0,
+        fee: float = 0.001, slippage: float = 0.0002, short_fee: float = 0.001, deadband: float = 0.02, min_order: float = 200.0,
         closes: pd.DataFrame | None = None, vols: pd.DataFrame | None = None) -> tuple[pd.Series, dict]:
     if closes is None:
         closes, vols = load_data(scfg.whitelist)
@@ -82,7 +82,7 @@ def run(start: str, end: str, scfg: StrategyConfig = StrategyConfig(), rcfg: Ris
 
         regime = market_regime(win["BTC"], scfg)
         blocked = risk.blocked(now)
-        base, _ = target_weights(win, scfg, regime, blocked)
+        base, _ = target_weights(win, scfg, regime, blocked, frozenset(c for c, v in values.items() if v >= min_order))
         mult, _ = risk.exposure_multiplier(equity, now, sum(base.values()))
         targets = apply_risk(base, mult, scfg, blocked)
         if not rebalance_now:
@@ -90,39 +90,34 @@ def run(start: str, end: str, scfg: StrategyConfig = StrategyConfig(), rcfg: Ris
             targets = {c: values.get(c, 0.0) / equity for c in qty}
         targets.update(target_override)
 
-        # trade toward targets (sells first)
-        for side in ("SELL", "BUY"):
-            for c in sorted(set(targets) | set(qty)):
-                p = px.get(c, np.nan)
-                if np.isnan(p) or p <= 0:
+        # trade toward targets; signed quantities (negative = short, standard short accounting:
+        # equity = cash + sum(qty * price), equivalent to Roostoo's collateral model)
+        for c in sorted(set(targets) | set(qty)):
+            p = px.get(c, np.nan)
+            if np.isnan(p) or p <= 0:
+                continue
+            cur = qty.get(c, 0.0) * p
+            tgt = targets.get(c, 0.0)
+            diff = tgt * equity - cur
+            full_exit = tgt == 0 and abs(cur) >= min_order
+            if full_exit:
+                diff = -cur
+            elif abs(diff) < max(deadband * equity, min_order):
+                continue
+            if diff > 0 and cur >= 0:  # long buy limited by cash
+                diff = min(diff, max(cash, 0.0) / (1 + fee))
+                if diff < min_order:
                     continue
-                cur = qty.get(c, 0.0) * p
-                diff = targets.get(c, 0.0) * equity - cur
-                full_exit = targets.get(c, 0.0) <= 0 and cur >= min_order
-                if not full_exit and abs(diff) < max(deadband * equity, min_order):
-                    continue
-                if side == "SELL" and diff < 0:
-                    sell_usd = cur if targets.get(c, 0.0) <= 0 else -diff
-                    fill = p * (1 - slippage)
-                    q = min(qty.get(c, 0.0), sell_usd / p)
-                    proceeds = q * fill
-                    cash += proceeds * (1 - fee)
-                    fees_paid += proceeds * fee
-                    qty[c] = qty.get(c, 0.0) - q
-                    turnover += proceeds
-                    trades += 1
-                    if qty[c] * p < 1:
-                        qty.pop(c, None)
-                elif side == "BUY" and diff > 0:
-                    buy_usd = min(diff, cash / (1 + fee))
-                    if buy_usd < min_order:
-                        continue
-                    fill = p * (1 + slippage)
-                    qty[c] = qty.get(c, 0.0) + buy_usd / fill
-                    cash -= buy_usd * (1 + fee)
-                    fees_paid += buy_usd * fee
-                    turnover += buy_usd
-                    trades += 1
+            fill = p * (1 + slippage * np.sign(diff))
+            f = short_fee if (cur < 0 or tgt < 0) else fee
+            dq = diff / fill
+            cash -= dq * fill + abs(diff) * f
+            fees_paid += abs(diff) * f
+            turnover += abs(diff)
+            trades += 1
+            qty[c] = qty.get(c, 0.0) + dq
+            if abs(qty[c] * p) < 1:
+                qty.pop(c, None)
         equity_curve.append((t, cash + sum(q * px[c] for c, q in qty.items())))
 
     eq = pd.Series(dict(equity_curve)).sort_index()

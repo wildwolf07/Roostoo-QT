@@ -46,11 +46,11 @@ def evaluate(args):
 
 def grid():
     configs = []
-    for rb, db, lb, npos, mg in itertools.product(
-            [1, 4], [0.02, 0.05], [(24, 72, 168), (72, 168, 336)], [3, 5], [0.10, 0.0]):
-        name = f"rb{rb}_db{db}_lb{lb[0]}-{lb[-1]}_n{npos}_core{mg}"
+    for rb, npos, shorts, db in itertools.product([4, 8], [3, 5], [False, True], [0.03]):
+        lb = (72, 168, 336)
+        name = f"rb{rb}_n{npos}_shorts{int(shorts)}_db{db}"
         configs.append((name, {"rebalance_hours": rb, "mom_lookbacks": lb, "max_positions": npos,
-                               "min_gross": mg, "history_bars": max(400, lb[-1] + 80)},
+                               "min_gross": 0.0, "history_bars": 420, "enable_shorts": shorts},
                         {"deadband": db}))
     return configs
 

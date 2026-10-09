@@ -77,11 +77,12 @@ class Bot:
         eq = pf.equity
         self.risk.update_equity(eq, now)
         dd = self.risk.drawdown(eq)
-        gross = sum(pf.values.values()) / eq if eq else 0.0
-        self.db.log_equity(eq, pf.usd_total, gross, dd, {c: round(v, 2) for c, v in pf.values.items()})
+        signed = pf.signed_values()
+        gross = sum(abs(v) for v in signed.values()) / eq if eq else 0.0
+        self.db.log_equity(eq, pf.usd_total, gross, dd, {c: round(v, 2) for c, v in signed.items()})
 
-        prices = {c: t["bid"] for c, t in ticker.items()}
-        stops = self.risk.check_stops(pf.values, prices, now, self.s.execution.min_order_usd)
+        prices = {c: (t["ask"] if signed.get(c, 0) < 0 else t["bid"]) for c, t in ticker.items()}
+        stops = self.risk.check_stops(signed, prices, now, self.s.execution.min_order_usd)
         if stops:
             log.warning("trailing stop hit: %s", stops)
             self.db.log_decision("stop", {"coins": stops, "highs": {c: self.risk.state.position_highs.get(c) for c in stops}})
@@ -105,8 +106,9 @@ class Bot:
 
         regime = market_regime(closes["BTC"], cfg)
         blocked = self.risk.blocked(now)
-        base, diag = target_weights(closes, cfg, regime, blocked)
-        risk_mult, risk_diag = self.risk.exposure_multiplier(pf.equity, now, sum(base.values()))
+        held = frozenset(c for c, v in pf.values.items() if v >= self.s.execution.min_order_usd)
+        base, diag = target_weights(closes, cfg, regime, blocked, held)
+        risk_mult, risk_diag = self.risk.exposure_multiplier(pf.equity, now, sum(abs(v) for v in base.values()))
         targets = apply_risk(base, risk_mult, cfg, blocked)
         diag.update(risk=risk_diag, universe=universe, targets={c: round(w, 4) for c, w in targets.items()},
                     equity=round(pf.equity, 2), current={c: round(w, 4) for c, w in pf.weights().items()})

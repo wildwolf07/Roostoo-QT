@@ -47,6 +47,12 @@ class StrategyConfig:
     vol_lookback: int = 72
     max_positions: int = 4
     rebalance_hours: int = 1           # scheduled rebalance every N hours (UTC-aligned)
+    hold_rank_buffer: int = 0          # hysteresis: keep a held coin while rank < max_positions + buffer
+    # Short sleeve: in RISK_OFF, short the weakest coins (Roostoo /v6 shorts, 0.1% fee each way)
+    enable_shorts: bool = False
+    short_max_positions: int = 3
+    short_max_gross: float = 0.6
+    short_exclude: tuple = ("PAXG",)
 
     # Sizing
     target_daily_vol: float = 0.012    # portfolio daily vol target (1.2%)

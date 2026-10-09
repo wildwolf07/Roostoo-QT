@@ -112,5 +112,47 @@ class TestExecutionPlanning(unittest.TestCase):
         self.assertEqual(self.ex.plan({"BTC": 0.31}, pf, self.ticker, deadband_frac=0.02), [])
 
 
+class TestShorts(unittest.TestCase):
+    def setUp(self):
+        info = {"BTC": {"AmountPrecision": 5, "PricePrecision": 2, "CanTrade": True},
+                "SOL": {"AmountPrecision": 3, "PricePrecision": 2, "CanTrade": True}}
+        self.ex = Executor(client=None, db=None, settings=Settings(mode="paper", api_key="k", api_secret="s"),
+                           pair_info=info)
+        self.ticker = {"BTC": {"bid": 80_000.0, "ask": 80_000.01, "last": 80_000.0},
+                       "SOL": {"bid": 100.0, "ask": 100.01, "last": 100.0}}
+
+    def test_portfolio_counts_short_position_value(self):
+        bal = {"Success": True, "SpotWallet": {"USD": {"Free": 90_000, "Lock": 0}}}
+        shorts = {"Success": True, "Positions": [{"Pair": "SOL/USD", "ShortQty": 100, "CurrentPrice": 95,
+                                                   "Collateral": 10_000, "PositionValue": 10_500}]}
+        pf = build_portfolio(bal, self.ticker, shorts)
+        self.assertAlmostEqual(pf.equity, 100_500)
+        self.assertAlmostEqual(pf.weights()["SOL"], -9_500 / 100_500)
+
+    def test_plan_opens_and_closes_shorts(self):
+        pf = Portfolio(usd_free=100_000, usd_total=100_000)
+        plans = self.ex.plan({"SOL": -0.2}, pf, self.ticker, 0.02)
+        self.assertEqual([(p.coin, p.side, p.qty) for p in plans], [("SOL", "SHORT_OPEN", 20_000.0)])
+        pf = Portfolio(usd_free=80_000, usd_total=80_000, short_notional={"SOL": 20_000}, short_value={"SOL": 20_000})
+        plans = self.ex.plan({}, pf, self.ticker, 0.02)
+        self.assertEqual([(p.side, p.qty) for p in plans], [("SHORT_CLOSE", 100.0)])
+
+    def test_short_trailing_stop(self):
+        rm = RiskManager(RiskConfig())
+        rm.state.asset_daily_vol["SOL"] = 0.02          # 5% stop
+        self.assertEqual(rm.check_stops({"SOL": -10_000}, {"SOL": 100.0}, NOW, 200), [])
+        self.assertEqual(rm.check_stops({"SOL": -10_000}, {"SOL": 90.0}, NOW, 200), [])
+        self.assertEqual(rm.check_stops({"SOL": -10_000}, {"SOL": 94.6}, NOW, 200), ["SOL"])
+
+    def test_short_sleeve_only_in_risk_off(self):
+        from dataclasses import replace
+        cfg = replace(StrategyConfig(), enable_shorts=True)
+        closes = trending_closes(drift=(-0.002, -0.001, -0.003))
+        w_off, _ = target_weights(closes, cfg, Regime("RISK_OFF", 0.0))
+        self.assertTrue(w_off and all(v < 0 for v in w_off.values()))
+        w_on, _ = target_weights(closes, cfg, Regime("RISK_ON", 1.0))
+        self.assertTrue(all(v >= 0 for v in w_on.values()))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -83,7 +83,7 @@ def portfolio_daily_vol(closes: pd.DataFrame, weights: pd.Series, lookback: int 
 
 
 def target_weights(closes: pd.DataFrame, cfg: StrategyConfig, regime: Regime,
-                   blocked: frozenset = frozenset()) -> tuple[dict, dict]:
+                   blocked: frozenset = frozenset(), held: frozenset = frozenset()) -> tuple[dict, dict]:
     """Long-only *base* target weights (fraction of equity), before portfolio risk scaling.
 
     1. rank coins by momentum score; keep the top ``max_positions`` with positive score
@@ -93,6 +93,11 @@ def target_weights(closes: pd.DataFrame, cfg: StrategyConfig, regime: Regime,
     scores = momentum_scores(closes, cfg)
     eligible = [c for c in scores.index if scores[c] > 0 and c not in blocked]
     picks = eligible[: cfg.max_positions]
+    if cfg.hold_rank_buffer > 0:
+        # hysteresis: keep held coins that are still near the top instead of churning them
+        keep = [c for c in eligible[: cfg.max_positions + cfg.hold_rank_buffer] if c in held]
+        fresh = [c for c in eligible if c not in keep][: max(0, cfg.max_positions - len(keep))]
+        picks = keep + fresh
     weights: dict = {}
     port_vol = float("nan")
 
@@ -109,11 +114,27 @@ def target_weights(closes: pd.DataFrame, cfg: StrategyConfig, regime: Regime,
         w = (raw * gross).clip(upper=cfg.max_weight) * regime.multiplier
         weights = {c: float(x) for c, x in w.items() if x > 0}
 
+    shorts: list = []
+    if cfg.enable_shorts and regime.label == "RISK_OFF":
+        losers = [c for c in reversed(scores.index)
+                  if scores[c] < 0 and c not in blocked and c not in cfg.short_exclude]
+        shorts = losers[: cfg.short_max_positions]
+        if shorts:
+            svol = hourly_vol(closes[shorts], cfg.vol_lookback).replace(0, np.nan).dropna()
+            shorts = list(svol.index)
+        if shorts:
+            raw_s = (1.0 / svol) / (1.0 / svol).sum()
+            pv = portfolio_daily_vol(closes, raw_s)
+            sgross = cfg.short_max_gross if not pv or np.isnan(pv) else min(cfg.short_max_gross, cfg.target_daily_vol / pv)
+            for c, x in (raw_s * sgross).clip(upper=cfg.max_weight).items():
+                weights[c] = weights.get(c, 0.0) - float(x)
+
     diagnostics = {
+        "shorts": shorts,
         "regime": regime.label, "regime_mult": regime.multiplier, "regime_details": regime.details,
         "scores": {c: round(float(s), 3) for c, s in scores.head(10).items()},
         "picks": picks, "portfolio_daily_vol": None if np.isnan(port_vol) else round(port_vol, 5),
-        "blocked": sorted(blocked), "base_gross": round(sum(weights.values()), 4),
+        "blocked": sorted(blocked), "base_gross": round(sum(abs(v) for v in weights.values()), 4),
     }
     return weights, diagnostics
 
@@ -122,8 +143,8 @@ def apply_risk(weights: dict, risk_mult: float, cfg: StrategyConfig,
                blocked: frozenset = frozenset()) -> dict:
     """Scale base weights by the risk multiplier, then keep a small core position so the
     book always has something to manage (guarantees daily strategy-driven activity)."""
-    out = {c: w * risk_mult for c, w in weights.items() if w * risk_mult > 0}
-    total = sum(out.values())
+    out = {c: w * risk_mult for c, w in weights.items() if w * risk_mult != 0}
+    total = sum(abs(v) for v in out.values())
     if total < cfg.min_gross and cfg.core_asset not in blocked:
         out[cfg.core_asset] = out.get(cfg.core_asset, 0.0) + (cfg.min_gross - total)
     return out

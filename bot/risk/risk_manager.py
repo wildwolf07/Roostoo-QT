@@ -103,18 +103,26 @@ class RiskManager:
         return min(self.cfg.stop_max, max(self.cfg.stop_min, self.cfg.stop_vol_mult * vol))
 
     def check_stops(self, holdings_usd: dict, prices: dict, now: datetime, min_usd: float) -> list:
-        """Update position highs; return coins whose price fell below their trailing stop."""
+        """Update each position's best price since entry; return coins that hit their trailing stop.
+        ``holdings_usd`` is signed: positive = long, negative = short."""
         triggered = []
         for coin in list(self.state.position_highs):
-            if holdings_usd.get(coin, 0.0) < min_usd:
+            if abs(holdings_usd.get(coin, 0.0)) < min_usd:
                 self.state.position_highs.pop(coin, None)  # position closed
         for coin, value in holdings_usd.items():
             price = prices.get(coin)
-            if value < min_usd or not price:
+            if abs(value) < min_usd or not price:
                 continue
-            high = max(self.state.position_highs.get(coin, price), price)
-            self.state.position_highs[coin] = high
-            if price <= high * (1.0 - self.stop_distance(coin)):
+            dist = self.stop_distance(coin)
+            best = self.state.position_highs.get(coin, price)
+            if value > 0:
+                best = max(best, price)
+                hit = price <= best * (1.0 - dist)
+            else:
+                best = min(best, price)
+                hit = price >= best * (1.0 + dist)
+            self.state.position_highs[coin] = best
+            if hit:
                 triggered.append(coin)
         return triggered
 
