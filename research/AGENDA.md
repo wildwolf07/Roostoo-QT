@@ -17,12 +17,15 @@ Ground rules
        daily rebalance (e.g. delay buys of coins that just pumped). Estimate bps saved per trade.
 4. [x] Sleeve weights: equal vs inverse-vol vs recent-performance; and a 5th sleeve candidate
        (e.g. low-risk L/S restricted to calm shorts). Only adopt with IS+OOS evidence.
-5. [ ] Tail-risk study: behaviour in crash hours (e.g. 2025-10-10) and pump events; check
+5. [x] Tail-risk study: behaviour in crash hours (e.g. 2025-10-10) and pump events; check
        short-squeeze exposure; stop calibration.
 6. [x] Scoring-aware analysis: how vol target trades off P(top-20 return) against
        Sortino/Sharpe/Calmar over a 7-day horizon (Monte Carlo from backtest returns).
-7. [ ] Live monitoring script: composite score from equity log, live vs backtest tracking.
+7. [x] Live monitoring script: composite score from equity log, live vs backtest tracking.
 8. [ ] Finale prep: decision log, deck outline (Oct 27 if finalist), README polish.
+
+9. [ ] Stress test on 2021-2022 (LUNA, FTX crashes, full bear market) as extra out-of-sample.
+10. [ ] Finale deck outline + README final polish; tag v1.0-submission before Oct 14.
 
 ## Log
 - 04:20 IST #1 DONE. research/overlay_study.py replays the live overlay on ensemble returns,
@@ -56,3 +59,10 @@ Ground rules
   only falling coins): MDD 14.6%, OOS 4.63 but IS 1.69, 2026 Sharpe 0.88 (the sleeve alone was -1.29
   in 2026). No alternative wins in BOTH periods, so NO CHANGE (rule). Sleeve correlations:
   mom_ls vs lowrisk_lo -0.19; mom_lo vs lowrisk_lo 0.79 (both long beta); mom_ls vs mom_f 0.74.
+- #5 DONE (research/tail_study.py). Ensemble worst hour since 2023 -1.76% (market -11.7% that hour);
+  2025-10-10/11 crash window: ensemble -2.32% vs market -20.6%, BTC -9.4%. Worst day -3.0%.
+  Net exposure +0.31 on average (5-95%: +0.12..+0.49), gross 0.64, daily corr to market 0.68.
+  Trailing stops HURT in both periods: none SR 1.27 (IS 0.84 / OOS 1.98, MDD 16.9%) vs live 6-15%
+  stops SR 0.75 (0.35 / 1.46, MDD 18.2%); old 3-8% 0.74; wide 10-25% 0.94. DISABLED stops
+  (commit 0412056, pushed, fresh clone OK). User deployed 640a349 and was given the command for 0412056.
+- #7 DONE earlier: scripts/daily_report.py (contest-window composite estimate).

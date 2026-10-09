@@ -160,3 +160,10 @@ days): the median composite is ~1.58 for 0.75×–1.6× exposure (the ratios are
 scale-invariant). More exposure raises P(return > 2%) from 19% to 24% but also raises
 P(loss > 3%) from 3% to 7.5%. Exposure stays at 1.0× unless the leaderboard shows we are
 below the top-20 cutoff.
+
+**Tail risk and stops** (`research/tail_study.py`): the ensemble's worst hour since 2023 was
+−1.8% (equal-weight market −11.7% in the same hour). In the 2025-10-10/11 crash window the
+ensemble lost −2.3% while the market lost −20.6% and BTC −9.4%. Average net exposure is
++0.31 and gross 0.64. Per-coin trailing stops reduced Sharpe in **both** periods (none 1.27;
+6–15% stops 0.75; 3–8% 0.74; 10–25% 0.94) without lowering max drawdown, so they are disabled.
+Portfolio-level protection remains the 2.5–7% drawdown brake.

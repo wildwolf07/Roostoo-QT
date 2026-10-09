@@ -11,6 +11,7 @@ committed code, deployed with `deploy/deploy.sh`.
 | 3 | Oct 10 | **v1 → v2 ensemble** of 4 sleeves: momentum L/S (beta-neutral), momentum long-only, filtered momentum L/S (no lottery longs, only calm shorts), low-risk long-only | 3.8-year, 31-coin study, in-sample vs out-of-sample. The ensemble had the best Sharpe (0.73) and lowest drawdown, and was positive in every year. Live code reproduces research weights exactly (parity 8e-17) | `8c96068` |
 | 4 | Oct 10 | **Risk overlay recalibrated.** Removed the CPPI floor and the 24h loss limit. Drawdown brake loosened to 2.5–7%. Stops widened to disaster-only (6–15%) | Replaying the live overlay on every 14-day window showed the tight overlay *reduced* the OOS median composite from +2.67 to −0.78 (whipsaw) | `80a8062` |
 | 5 | Oct 10 | **Universe 15 → 25 of 29 coins**; PEPE and SHIB removed | Breadth study: Sharpe 0.89 → 1.27, every year above 1.0, flat across 3–5 coins per side. PEPE/SHIB have 18–25 bp spreads on Roostoo | `640a349` |
+| 6 | Oct 10 | **Per-coin trailing stops disabled** (the portfolio drawdown brake stays) | Stops cut Sharpe from 1.27 to 0.75 and lowered the in-sample *and* out-of-sample results without reducing max drawdown. The ensemble lost only −2.3% in the 2025-10-10 crash (market −20.6%) | `0412056` |
 
 ## Ideas tested and rejected (with numbers)
 
@@ -25,6 +26,7 @@ committed code, deployed with `deploy/deploy.sh`.
 | Funding-rate crowding | Practitioner evidence | Significant in-sample, ~0 out-of-sample |
 | Market timing (breadth, funding, premium, order flow, vol ratio) | Would capture market direction | Nothing significant in both periods |
 | Tight risk overlay (CPPI 96%, 1.5–4.5% brake, 24h limit) | Lower drawdown | Whipsaw: OOS composite −0.78 vs +2.70 |
+| Per-coin trailing stops (3–8%, 6–15%, 10–25%) | Cut losers early | Sell on noise and miss recoveries; every setting lowered Sharpe in both periods |
 | Higher vol target (1.6–2.0%) | Larger returns | Composite unchanged, fatter loss tail. Kept at 1.2% unless the leaderboard demands more |
 
 ## Process safeguards
