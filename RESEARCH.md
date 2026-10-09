@@ -210,3 +210,10 @@ is 21% at 1.0× and 27% at 1.33×; P(loss > 3%) is 3.5% and 5.8%.
 of equity, so small targets are never opened (average |held − target| is 13% of equity). Against
 trading every change: Sharpe 1.21 vs 1.27, IS composite 4.64 vs 1.84, OOS 3.00 vs 4.02. The
 evidence is mixed across periods, so the deadband is unchanged (it also cuts turnover 0.196 → 0.138).
+
+**Single-name and short-squeeze risk:** a Roostoo short can lose up to its whole collateral, so we
+measured the worst historical single-coin days. The worst short day cost **−2.1% of equity** (XLM,
+2023-07-13, the XRP-ruling pump), then TRX −1.8% (2024-12-03). The worst long day was −2.0%
+(BNB). The largest short weight ever was 10%, and 95% of short weights were ≤ 5.2%. The worst
+full short-book day was −3.3%. Inverse-volatility sizing, the 30% cap and four-sleeve averaging
+keep single-name blow-ups to about 2% of equity.
