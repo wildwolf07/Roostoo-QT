@@ -1,0 +1,16 @@
+[Unit]
+Description=Roostoo autonomous trading bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ec2-user
+WorkingDirectory=/opt/roostoo-bot
+ExecStart=/opt/roostoo-bot/.venv/bin/python -m bot.main
+Restart=always
+RestartSec=15
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

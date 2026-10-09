@@ -1,0 +1,138 @@
+"""Central configuration.
+
+Every tunable number lives here so a strategy change is always a visible,
+committed diff. Secrets come only from the environment (.env, gitignored).
+"""
+from __future__ import annotations
+
+import os
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+
+
+def load_dotenv(path: Path = ROOT / ".env") -> None:
+    """Minimal .env loader (avoids an extra dependency). Existing env vars win."""
+    if not path.exists():
+        return
+    for line in path.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip())
+
+
+@dataclass(frozen=True)
+class StrategyConfig:
+    # Universe: liquid crypto majors that also trade on Binance (for OHLCV history).
+    # Tokenized stocks and thin meme coins are excluded on purpose.
+    whitelist: tuple = (
+        "BTC", "ETH", "SOL", "BNB", "XRP", "DOGE", "ADA", "AVAX", "LINK",
+        "SUI", "LTC", "DOT", "NEAR", "TRX", "UNI", "AAVE", "HBAR", "XLM",
+        "APT", "ARB", "FET", "ENA", "ZEC", "TAO", "PAXG",
+    )
+    universe_size: int = 12            # top-N of whitelist by 24h USD volume
+    bar_interval: str = "1h"
+    history_bars: int = 400            # hourly bars fetched for indicators
+
+    # Regime (BTC as market factor)
+    regime_fast_ema: int = 24
+    regime_slow_ema: int = 72
+
+    # Momentum: vol-normalised returns averaged over several lookbacks (hours)
+    mom_lookbacks: tuple = (24, 72, 168)
+    vol_lookback: int = 72
+    max_positions: int = 4
+    rebalance_hours: int = 1           # scheduled rebalance every N hours (UTC-aligned)
+
+    # Sizing
+    target_daily_vol: float = 0.012    # portfolio daily vol target (1.2%)
+    max_weight: float = 0.30           # per-asset cap
+    max_gross: float = 0.95            # never fully invested; no leverage
+    min_gross: float = 0.10            # keep a small core so the bot trades daily
+    core_asset: str = "BTC"            # core sleeve used when nothing qualifies
+
+
+@dataclass(frozen=True)
+class RiskConfig:
+    initial_equity: float = 100_000.0
+    # Drawdown brake: linear de-risking between these drawdowns from peak.
+    dd_soft: float = 0.015
+    dd_hard: float = 0.045
+    dd_min_mult: float = 0.25
+    # CPPI-style cap: max gross = multiplier * cushion above floor.
+    cppi_floor: float = 0.96           # fraction of initial equity
+    cppi_multiplier: float = 15.0
+    # Rolling 24h loss limit
+    day_loss_limit: float = 0.015
+    day_loss_mult: float = 0.5
+    # Per-position trailing stop from the high since entry
+    stop_vol_mult: float = 2.5         # x daily vol of the asset
+    stop_min: float = 0.03
+    stop_max: float = 0.08
+    stop_cooldown_hours: int = 6
+    # End-of-competition taper (UTC)
+    taper_start: datetime = datetime(2026, 10, 16, 12, 0, tzinfo=timezone.utc)
+    taper_mult: float = 0.5
+
+
+@dataclass(frozen=True)
+class ExecutionConfig:
+    deadband_frac: float = 0.02        # min |target-current| as fraction of equity
+    min_order_usd: float = 200.0
+    daily_rebalance_deadband: float = 0.005
+    limit_timeout_sec: int = 180       # maker order wait before market fallback
+    max_order_frac: float = 0.35       # single order notional cap vs equity
+    max_price_deviation: float = 0.03  # reject orders far from current ticker
+    taker_fee: float = 0.001
+    maker_fee: float = 0.0005
+
+
+@dataclass(frozen=True)
+class RuntimeConfig:
+    base_url: str = "https://mock-api.roostoo.com"
+    binance_url: str = "https://data-api.binance.vision"
+    loop_seconds: int = 60
+    max_calls_per_minute: int = 20     # exchange limit is 30; keep headroom
+    db_path: Path = ROOT / "data" / "bot.db"
+    log_dir: Path = ROOT / "logs"
+    # Competition key refuses to run before this time (UTC).
+    live_start: datetime = datetime(2026, 10, 4, 0, 0, tzinfo=timezone.utc)
+    live_end: datetime = datetime(2026, 10, 17, 23, 59, tzinfo=timezone.utc)
+
+
+@dataclass(frozen=True)
+class Settings:
+    mode: str
+    api_key: str
+    api_secret: str
+    strategy: StrategyConfig = field(default_factory=StrategyConfig)
+    risk: RiskConfig = field(default_factory=RiskConfig)
+    execution: ExecutionConfig = field(default_factory=ExecutionConfig)
+    runtime: RuntimeConfig = field(default_factory=RuntimeConfig)
+
+    @property
+    def can_trade(self) -> bool:
+        return self.mode in ("test", "live")
+
+
+def load_settings(mode: str | None = None) -> Settings:
+    load_dotenv()
+    mode = (mode or os.environ.get("MODE", "paper")).lower()
+    if mode not in ("paper", "test", "live"):
+        raise ValueError(f"MODE must be paper|test|live, got {mode!r}")
+    # paper mode reads data with the test key but never sends orders
+    prefix = "ROOSTOO_LIVE" if mode == "live" else "ROOSTOO_TEST"
+    key = os.environ.get(f"{prefix}_API_KEY", "")
+    secret = os.environ.get(f"{prefix}_API_SECRET", "")
+    if not key or not secret:
+        raise RuntimeError(f"Missing {prefix}_API_KEY / {prefix}_API_SECRET in environment")
+    settings = Settings(mode=mode, api_key=key, api_secret=secret)
+    if mode == "live":
+        now = datetime.now(timezone.utc)
+        if now < settings.runtime.live_start:
+            raise RuntimeError("Competition key may not be used before the competition starts")
+    return settings

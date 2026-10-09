@@ -1,0 +1,116 @@
+"""Unit tests for the pieces where a bug would cost money: signing, sizing,
+order planning, risk scaling. Run: python -m pytest -q  (or python -m unittest)"""
+from __future__ import annotations
+
+import unittest
+from datetime import datetime, timedelta, timezone
+
+import numpy as np
+import pandas as pd
+
+from bot.api.roostoo_client import sign
+from bot.config import ExecutionConfig, RiskConfig, Settings, StrategyConfig
+from bot.execution.executor import Executor, Portfolio, build_portfolio, floor_to
+from bot.risk.risk_manager import RiskManager
+from bot.strategy.signals import Regime, apply_risk, market_regime, momentum_scores, target_weights
+
+NOW = datetime(2026, 10, 10, 12, tzinfo=timezone.utc)
+
+
+def trending_closes(n=400, coins=("BTC", "ETH", "SOL"), drift=(0.001, 0.0005, -0.001), seed=0):
+    rng = np.random.default_rng(seed)
+    idx = pd.date_range("2026-09-01", periods=n, freq="h", tz="UTC")
+    data = {c: 100 * np.exp(np.cumsum(d + 0.005 * rng.standard_normal(n))) for c, d in zip(coins, drift)}
+    return pd.DataFrame(data, index=idx)
+
+
+class TestSigning(unittest.TestCase):
+    def test_matches_official_example(self):
+        params = {"pair": "BNB/USD", "quantity": "2000", "side": "BUY",
+                  "timestamp": "1580774512000", "type": "MARKET"}
+        secret = "S1XP1e3UZj6A7H5fATj0jNhqPxxdSJYdInClVN65XAbvqqMKjVHjA7PZj4W12oep"  # public doc example, allowlist-secret
+        self.assertEqual(sign(params, secret),
+                         "20b7fd5550b67b3bf0c1684ed0f04885261db8fdabd38611e9e6af23c19b7fff")  # allowlist-secret
+
+
+class TestSignals(unittest.TestCase):
+    def test_momentum_ranks_uptrend_first(self):
+        scores = momentum_scores(trending_closes(), StrategyConfig())
+        self.assertEqual(scores.index[0], "BTC")
+        self.assertLess(scores["SOL"], 0)
+
+    def test_weights_respect_caps_and_skip_downtrends(self):
+        cfg = StrategyConfig()
+        w, _ = target_weights(trending_closes(), cfg, Regime("RISK_ON", 1.0))
+        self.assertNotIn("SOL", w)
+        self.assertTrue(all(x <= cfg.max_weight + 1e-9 for x in w.values()))
+        self.assertLessEqual(sum(w.values()), cfg.max_gross + 1e-9)
+
+    def test_risk_off_keeps_only_core(self):
+        cfg = StrategyConfig()
+        w, _ = target_weights(trending_closes(), cfg, Regime("RISK_OFF", 0.0))
+        final = apply_risk(w, 1.0, cfg)
+        self.assertEqual(set(final), {cfg.core_asset} if cfg.min_gross > 0 else set())
+
+    def test_downtrend_is_risk_off(self):
+        closes = trending_closes(drift=(-0.002, 0, 0))
+        self.assertEqual(market_regime(closes["BTC"], StrategyConfig()).label, "RISK_OFF")
+
+
+class TestRisk(unittest.TestCase):
+    def test_drawdown_brake_reduces_exposure(self):
+        rm = RiskManager(RiskConfig())
+        rm.update_equity(105_000, NOW - timedelta(hours=30))
+        full, _ = rm.exposure_multiplier(105_000, NOW, 0.5)
+        hurt, _ = rm.exposure_multiplier(100_000, NOW, 0.5)   # ~4.8% drawdown
+        self.assertEqual(full, 1.0)
+        self.assertLessEqual(hurt, RiskConfig().dd_min_mult + 1e-9)
+
+    def test_cppi_limits_gross_near_floor(self):
+        rm = RiskManager(RiskConfig())
+        rm.update_equity(97_000, NOW)
+        mult, d = rm.exposure_multiplier(97_000, NOW, 0.9)
+        self.assertLess(mult, 0.5)
+
+    def test_trailing_stop_triggers(self):
+        rm = RiskManager(RiskConfig())
+        rm.state.asset_daily_vol["ETH"] = 0.02     # stop = max(3%, 2.5*2%) = 5%
+        self.assertEqual(rm.check_stops({"ETH": 10_000}, {"ETH": 100.0}, NOW, 200), [])
+        self.assertEqual(rm.check_stops({"ETH": 10_000}, {"ETH": 94.0}, NOW, 200), ["ETH"])
+
+
+class TestExecutionPlanning(unittest.TestCase):
+    def setUp(self):
+        info = {"BTC": {"AmountPrecision": 5, "PricePrecision": 2, "CanTrade": True},
+                "ETH": {"AmountPrecision": 4, "PricePrecision": 2, "CanTrade": True}}
+        settings = Settings(mode="paper", api_key="k", api_secret="s")
+        self.ex = Executor(client=None, db=None, settings=settings, pair_info=info)
+        self.ticker = {"BTC": {"bid": 80_000.0, "ask": 80_000.01, "last": 80_000.0},
+                       "ETH": {"bid": 4_000.0, "ask": 4_000.01, "last": 4_000.0}}
+
+    def test_floor_to(self):
+        self.assertEqual(floor_to(0.123456789, 5), 0.12345)
+
+    def test_build_portfolio_reads_spot_wallet(self):
+        resp = {"Success": True, "SpotWallet": {"USD": {"Free": 90_000, "Lock": 0},
+                                                "BTC": {"Free": 0.125, "Lock": 0}}}
+        pf = build_portfolio(resp, self.ticker)
+        self.assertAlmostEqual(pf.equity, 100_000)
+
+    def test_plan_buys_and_exits(self):
+        pf = Portfolio(usd_free=50_000, usd_total=50_000, qty_total={"ETH": 12.5},
+                       qty_free={"ETH": 12.5}, values={"ETH": 50_000})
+        plans = self.ex.plan({"BTC": 0.3}, pf, self.ticker, deadband_frac=0.02)
+        sides = {p.coin: p.side for p in plans}
+        self.assertEqual(sides, {"BTC": "BUY", "ETH": "SELL"})
+        eth = next(p for p in plans if p.coin == "ETH")
+        self.assertLessEqual(eth.qty, 12.5)
+
+    def test_deadband_suppresses_small_trades(self):
+        pf = Portfolio(usd_free=70_000, usd_total=70_000, qty_total={"BTC": 0.375},
+                       qty_free={"BTC": 0.375}, values={"BTC": 30_000})
+        self.assertEqual(self.ex.plan({"BTC": 0.31}, pf, self.ticker, deadband_frac=0.02), [])
+
+
+if __name__ == "__main__":
+    unittest.main()
