@@ -12,6 +12,7 @@ committed code, deployed with `deploy/deploy.sh`.
 | 4 | Oct 10 | **Risk overlay recalibrated.** Removed the CPPI floor and the 24h loss limit. Drawdown brake loosened to 2.5–7%. Stops widened to disaster-only (6–15%) | Replaying the live overlay on every 14-day window showed the tight overlay *reduced* the OOS median composite from +2.67 to −0.78 (whipsaw) | `80a8062` |
 | 5 | Oct 10 | **Universe 15 → 25 of 29 coins**; PEPE and SHIB removed | Breadth study: Sharpe 0.89 → 1.27, every year above 1.0, flat across 3–5 coins per side. PEPE/SHIB have 18–25 bp spreads on Roostoo | `640a349` |
 | 6 | Oct 10 | **Per-coin trailing stops disabled** (the portfolio drawdown brake stays) | Stops cut Sharpe from 1.27 to 0.75 and lowered the in-sample *and* out-of-sample results without reducing max drawdown. The ensemble lost only −2.3% in the 2025-10-10 crash (market −20.6%) | `0412056` |
+| 7 | Oct 10 | **Drawdown brake 2.5–7% → catastrophe-only 6–12%** | At the live 25-coin config the 2.5–7% brake cut the median 14-day composite in both periods (IS 2.32 → 1.40, OOS 5.00 → 4.21). The 6–12% brake equals 'no overlay' on the median and still trims the worst-case drawdown | next commit |
 
 ## Ideas tested and rejected (with numbers)
 

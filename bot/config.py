@@ -83,12 +83,13 @@ class StrategyConfig:
 @dataclass(frozen=True)
 class RiskConfig:
     initial_equity: float = 100_000.0
-    # Settings chosen by research/overlay_study.py: tight brakes (CPPI 96% floor, 1.5-4.5% brake,
-    # 24h limit) whipsawed - cut exposure after small dips and missed rebounds (OOS median
-    # composite -0.78 vs +2.70 for the loose brake below). Keep only a loose disaster brake.
+    # Settings chosen by research/overlay_study.py (live 25-coin ensemble, 14-day windows): any brake
+    # that acts on ordinary dips whipsaws (de-risks, then misses the rebound). A 2.5-7% brake cut the
+    # median composite IS 2.32 -> 1.40 and OOS 5.00 -> 4.21. A catastrophe-only brake (6-12%) matches
+    # 'no overlay' in both periods while trimming the worst 14-day drawdown (IS 10.2% -> 9.5%).
     # Drawdown brake: linear de-risking between these drawdowns from peak.
-    dd_soft: float = 0.025
-    dd_hard: float = 0.07
+    dd_soft: float = 0.06
+    dd_hard: float = 0.12
     dd_min_mult: float = 0.25
     # CPPI-style cap: max gross = multiplier * cushion above floor (floor 0 = disabled).
     cppi_floor: float = 0.0            # fraction of initial equity

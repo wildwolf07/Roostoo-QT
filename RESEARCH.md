@@ -197,3 +197,11 @@ Live ensemble over 1,345 days: annual Sharpe 1.27, skew 0.03, kurtosis 5.0.
 
 We are confident the edge is real. Its magnitude is probably overstated by selection, so we
 expect a live Sharpe below the backtest's 1.27.
+
+**Overlay re-validated at the live 25-coin config:** no overlay gives a median 14-day composite
+of 2.32 IS / 5.00 OOS. The 2.5–7% brake gives 1.40 / 4.21 and the old tight overlay −2.19 / 0.94.
+A **catastrophe-only 6–12% brake** gives 2.32 / 5.00 (same as none) and lowers the worst
+14-day drawdown from 10.2% to 9.5% IS and from 9.1% to 8.8% OOS. **Adopted.** End-of-contest
+taper: IS favours it (1.35 vs 1.22), OOS does not (2.86 vs 3.28), so it is unchanged.
+Exposure at 25 coins: the median composite is flat at ~3.3 for 0.75×–1.6×; P(return > 2%)
+is 21% at 1.0× and 27% at 1.33×; P(loss > 3%) is 3.5% and 5.8%.

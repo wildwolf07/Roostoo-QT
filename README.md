@@ -133,7 +133,7 @@ trailing stop exits immediately (with a 6h cooldown).
 | Regime gate (available, off) | BTC trend filter on the long sleeve; disabled because it added no value in testing (RESEARCH.md §2) |
 | Volatility target | gross exposure sized for ~1.2% expected portfolio daily volatility |
 | Position cap | ≤30% of equity per coin; gross ≤95%; no leverage |
-| Drawdown brake | linear de-risking from 2.5% to 7% drawdown from peak (down to ×0.25) |
+| Drawdown brake | catastrophe-only: linear de-risking from 6% to 12% drawdown from peak (down to ×0.25). Tighter brakes whipsaw (RESEARCH.md) |
 | Trailing stop | available but **disabled**: lowered Sharpe in both periods (RESEARCH.md, tail study) |
 | Taper | final ~36h of the contest → exposure ×0.5 |
 | Operational | stale-data skip, price sanity check (±3% of ticker), order-size cap, state rebuilt from exchange every loop |
