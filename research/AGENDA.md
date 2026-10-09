@@ -8,7 +8,7 @@ Ground rules
 - Deadline context: repo submission before Oct 14; live trading ends Oct 17; freeze Oct 13.
 
 ## Queue (highest value first)
-1. [ ] Risk-overlay calibration: add the live overlay (DD brake, CPPI, 24h limit, trailing stop)
+1. [x] Risk-overlay calibration: add the live overlay (DD brake, CPPI, 24h limit, trailing stop)
        to the vectorised backtester; measure its effect on 14-day composite, P(top-k return),
        max DD. Tune only if gains are robust IS and OOS.
 2. [ ] Robustness of the ensemble: sensitivity grid (n per side 3/4/5, lookbacks, vol target,
@@ -25,4 +25,9 @@ Ground rules
 8. [ ] Finale prep: decision log, deck outline (Oct 27 if finalist), README polish.
 
 ## Log
-- (entries appended as work completes)
+- 04:20 IST #1 DONE. research/overlay_study.py replays the live overlay on ensemble returns,
+  14-day windows stepped 3.5 days. Current overlay (CPPI 0.96/m15, brake 1.5-4.5%, 24h limit)
+  OOS median composite -0.78 vs none +2.67 vs loose brake (2.5-7%, no CPPI/24h) +2.70; IS the
+  same ranking. Whipsaw: de-risks after small dips, misses rebounds. Adopted the loose brake;
+  stops widened to 6-15% (disaster-only, untested; stops are not in the simulator).
+  Commit 80a8062, pushed; user to deploy with deploy.sh.
