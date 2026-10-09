@@ -45,6 +45,23 @@ def main() -> None:
         p_ret_gt_4pct=("ret", lambda x: (x > 0.04).mean()), p_ret_lt_m3pct=("ret", lambda x: (x < -0.03).mean()),
         median_mdd=("mdd", "median"), p95_mdd=("mdd", lambda x: x.quantile(0.95)),
         median_comp=("composite", "median"), p75_comp=("composite", lambda x: x.quantile(0.75)))
+    # end-of-contest taper: exposure x0.5 over the final 36 hours (live RiskConfig.taper_*)
+    taper_rows = []
+    for taper in (1.0, 0.5, 0.0):
+        for s in range(0, len(oos) - H, 12):
+            r = oos.values[s: s + H].copy()
+            r[-36:] *= taper
+            eq = pd.Series(np.concatenate([np.full(len(flat_idx), 100_000.0), 100_000 * np.cumprod(1 + r)]),
+                           index=flat_idx.append(act_idx))
+            st = summary(eq)
+            taper_rows.append({"taper": taper, "ret": st["total_return"], "composite": st["composite"],
+                               "mdd": st["max_drawdown"]})
+    tp = pd.DataFrame(taper_rows).groupby("taper").agg(
+        median_ret=("ret", "median"), p_ret_gt_2pct=("ret", lambda x: (x > 0.02).mean()),
+        median_comp=("composite", "median"), mean_comp_clip=("composite", lambda x: x.clip(-20, 50).mean()),
+        p95_mdd=("mdd", lambda x: x.quantile(0.95)))
+    print("\nend-of-contest taper (final 36h exposure multiple):")
+    print(tp.round(4).to_string())
     pd.set_option("display.width", 220)
     print(f"{ACTIVE_DAYS}-day active stretches from OOS ({oos.index[0].date()} -> {oos.index[-1].date()}), "
           f"{FLAT_DAYS} flat days prepended; k = exposure multiple of the 1.2%/day target")

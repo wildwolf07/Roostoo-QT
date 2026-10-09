@@ -81,6 +81,12 @@ def features(close, qv, tq, fund, prem) -> dict:
     beta = r1.rolling(336, min_periods=168).cov(btc).div(btc.rolling(336, min_periods=168).var(), axis=0)
     f["btc_catchup_1h"] = beta.mul(btc, axis=0) - r1
     f["btc_catchup_4h"] = beta.mul(btc.rolling(4).sum(), axis=0) - r1.rolling(4).sum()
+    # residual (idiosyncratic) momentum (Blitz, Huij & Martens 2011): strip the BTC component
+    # using the previous hour's beta, normalise by residual volatility
+    resid = r1 - beta.shift(1).mul(btc, axis=0)
+    rvol = resid.rolling(72, min_periods=48).std()
+    f["res_mom_168_336"] = (resid.rolling(168).sum() / (rvol * np.sqrt(168))
+                            + resid.rolling(336).sum() / (rvol * np.sqrt(336))) / 2
     # risk characteristics
     f["vol_72h"] = vol
     f["beta_btc"] = beta

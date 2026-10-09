@@ -42,8 +42,11 @@ def main() -> None:
     print(f"panel {close.index[0].date()} -> {close.index[-1].date()}, coins with 2021 data: "
           f"{int(close.loc[pd.Timestamp('2021-03-01', tz='UTC')].notna().sum())}")
     f = features(close, qv, qv * 0.5, fund, prem)
-    feats = {k: f[k] for k in ("vol_72h", "max_ret_24h", "beta_btc", "mom_blend_168_336")}
-    mom = (("mom_blend_168_336", 1.0),)
+    import os
+    momf = os.environ.get("MOMFEAT", "mom_blend_168_336")
+    feats = {k: f[k] for k in ("vol_72h", "max_ret_24h", "beta_btc", momf)}
+    mom = ((momf, 1.0),)
+    print("momentum feature:", momf)
     c = dict(rebalance_h=72, tranches=3, n_side=4, universe=StrategyConfig().universe_size)
     sleeves = [Variant("a", signals=mom, **c), Variant("b", signals=mom, long_only=True, beta_neutral=False, **c),
                Variant("c", signals=mom, long_max_rank=0.7, short_vol_rank=0.6, **c), Variant("d", long_only=True, **c)]

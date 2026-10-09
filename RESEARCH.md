@@ -182,3 +182,18 @@ drawdown 2.9%, median composite 2.73, in line with the main out-of-sample result
 Calendar-year Sharpe: 2021 2.81, **2022 −1.42**, 2023 1.47, 2024 1.26, 2025 1.39, 2026 0.94.
 The known weakness is a *prolonged* bear market, through the net long tilt (+0.31) of the two
 long-only sleeves.
+
+**Residual momentum** (Blitz, Huij & Martens 2011; strip BTC beta from returns): it looked
+better on 2023–26 (Sharpe 1.27 → 1.53, both periods' composites up) but was **worse on the
+unseen 2021–22 data** (median 14-day composite 2.73 → 1.59). **Not adopted.** Calendar-year
+Sharpe ratios have a standard error of about ±1, so "better every year" in the design period
+was weak evidence.
+
+**How much of our Sharpe is luck?** (`research/deflated_sharpe.py`, Bailey & López de Prado.)
+Live ensemble over 1,345 days: annual Sharpe 1.27, skew 0.03, kurtosis 5.0.
+- Probabilistic Sharpe Ratio: **P(true Sharpe > 0) = 99.2%**
+- Deflated Sharpe Ratio, which corrects for the best-of-N trials we ran:
+  **71% (N = 42 recorded trials), 64% (N = 80), 57% (N = 150)**
+
+We are confident the edge is real. Its magnitude is probably overstated by selection, so we
+expect a live Sharpe below the backtest's 1.27.

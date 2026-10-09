@@ -17,7 +17,7 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
-from bot.config import ROOT
+from bot.config import ROOT, StrategyConfig
 from bot.metrics import summary
 from research.signal_lab import SPLIT, features, load_panel
 from research.xs_backtest import Variant, build_tranched
@@ -41,7 +41,7 @@ def ensemble_returns() -> tuple[pd.Series, pd.Series]:
     feats = features(close, qv, tq, fund, prem)
     keep = {k: feats[k] for k in ("vol_72h", "max_ret_24h", "beta_btc", "mom_blend_168_336")}
     mom = (("mom_blend_168_336", 1.0),)
-    t3 = dict(rebalance_h=72, tranches=3)
+    t3 = dict(rebalance_h=72, tranches=3, universe=StrategyConfig().universe_size)   # live config
     sleeves = [
         Variant("mom_ls", signals=mom, **t3),
         Variant("mom_lo", signals=mom, long_only=True, beta_neutral=False, **t3),

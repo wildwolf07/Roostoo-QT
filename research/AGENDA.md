@@ -80,3 +80,17 @@ Ground rules
 - #8 DONE: docs/FINALE_DECK.md (10-slide storyline), DECISIONS.md, README "Results at a glance"
   with SVG charts (research/make_charts.py; no new dependencies). Shadow bot running on the TEST
   account on this Mac to mirror the live 00:00 UTC rebalance (logs/bot.log).
+- robustness re-run at universe 25: Sharpe min 0.89 / median 1.22 / max 1.44; live rank 5/15 (plateau).
+  n=3 and momentum-heavy weights look slightly better (Sharpe 1.29 / 1.32 vs 1.27), within noise
+  after ~50 trials (deflated-Sharpe logic). NO CHANGE.
+- next: end-of-contest taper test (score_mc variant).
+- taper (score_mc): OOS median composite no-taper 1.80 vs taper 1.66 (P(ret>2%) 20.2% vs 17.5%);
+  IS the opposite (0.47 vs 0.69). Mixed => NO CHANGE (taper stays).
+- next: residual momentum (Blitz-Huij-Martens 2011) in the momentum sleeves.
+- residual momentum (Blitz-Huij-Martens): 2023-26 Sharpe 1.27 -> 1.53, IS comp 1.84 -> 2.49, OOS
+  4.02 -> 4.74, BUT on unseen 2021-22: +18.0% / SR 0.65 vs +19.8% / 0.70 and median 14d composite
+  1.59 vs 2.73. Fails the unseen-data check => NOT adopted. Note: yearly Sharpe SE ~ +/-1, so
+  "every year better" in the design period was weak evidence.
+- next: deflated Sharpe ratio for the live ensemble given all trials run.
+- DSR (live 25-coin ensemble): PSR 0.992; DSR 0.711 (N=42), 0.637 (N=80), 0.565 (N=150).
+  Found and fixed: ensemble_returns() used universe 15; overlay/score_mc re-running at universe 25.
