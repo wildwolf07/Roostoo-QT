@@ -15,7 +15,7 @@ Ground rules
        filter thresholds, universe 12/15/20); check plateau, not peak. Deflated-Sharpe style note.
 3. [x] Execution alpha with zero turnover cost: use 1–4h reversal / BTC catch-up to TIME the
        daily rebalance (e.g. delay buys of coins that just pumped). Estimate bps saved per trade.
-4. [ ] Sleeve weights: equal vs inverse-vol vs recent-performance; and a 5th sleeve candidate
+4. [x] Sleeve weights: equal vs inverse-vol vs recent-performance; and a 5th sleeve candidate
        (e.g. low-risk L/S restricted to calm shorts). Only adopt with IS+OOS evidence.
 5. [ ] Tail-risk study: behaviour in crash hours (e.g. 2025-10-10) and pump events; check
        short-squeeze exposure; stop calibration.
@@ -51,3 +51,8 @@ Ground rules
   we are below the top-20 cutoff: needs leaderboard numbers from the user. Default stays 1.0x.
 - breadth without PEPE/SHIB confirmed (uni25 n4: Sharpe 1.27, +84%, OOS comp 4.02, all years > 1.0).
   ADOPTED live: whitelist 29 (no PEPE/SHIB), universe_size 25. Parity OK, tests OK, dry run OK.
+- #4 DONE (research/ablation.py, universe 25). All 4: Sharpe 1.27, IS 1.84, OOS 4.02, MDD 16.9%.
+  Without mom_f: Sharpe 1.30, IS 3.43 but OOS 3.35, MDD 19.8%. +5th sleeve (low-risk L/S, shorts
+  only falling coins): MDD 14.6%, OOS 4.63 but IS 1.69, 2026 Sharpe 0.88 (the sleeve alone was -1.29
+  in 2026). No alternative wins in BOTH periods, so NO CHANGE (rule). Sleeve correlations:
+  mom_ls vs lowrisk_lo -0.19; mom_lo vs lowrisk_lo 0.79 (both long beta); mom_ls vs mom_f 0.74.

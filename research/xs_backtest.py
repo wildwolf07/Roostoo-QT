@@ -39,6 +39,7 @@ class Variant:
     blend: tuple = ()               # names of variants to average (50/50) instead of own signals
     phase: int = 0                  # hour offset of the rebalance schedule (for tranching)
     tranches: int = 1               # average k phase-shifted copies (daily trading, slow turnover)
+    short_needs_neg_mom: bool = False  # only short coins whose momentum is already negative
 
 
 def zscore(row: pd.Series) -> pd.Series:
@@ -71,6 +72,9 @@ def build_weights(v: Variant, panel, feats) -> pd.DataFrame:
         vol_pct = feats["vol_72h"].loc[t, uni].rank(pct=True)
         long_pool = [c for c in score.index if max_pct.get(c, 0) <= v.long_max_rank]
         short_pool = [c for c in score.index[::-1] if vol_pct.get(c, 1) <= v.short_vol_rank]
+        if v.short_needs_neg_mom and "mom_blend_168_336" in feats:
+            m = feats["mom_blend_168_336"].loc[t]
+            short_pool = [c for c in short_pool if m.get(c, 0) < 0]
         longs = long_pool[: v.n_side]
         shorts = [] if v.long_only else [c for c in short_pool if c not in longs][: v.n_side]
         if not longs:

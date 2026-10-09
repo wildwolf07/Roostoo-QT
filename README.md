@@ -18,7 +18,7 @@
 | Execution | Maker-first limit orders (0.05% fee) with market fallback; deadbands to cut turnover |
 | Autonomy | Runs 24/7 on AWS EC2 under systemd; no manual input of any kind |
 
-### Why this strategy (full evidence in [RESEARCH.md](RESEARCH.md))
+### Why this strategy (full evidence in [RESEARCH.md](RESEARCH.md); every change and rejected idea in [DECISIONS.md](DECISIONS.md))
 1. **Literature first, then our own data.** We reviewed the crypto return-predictability
    literature (momentum, reversal, lottery/MAX, low-volatility, betting-against-beta, funding,
    order flow, lead-lag, seasonality) and tested every effect on 3.8 years of hourly data for
