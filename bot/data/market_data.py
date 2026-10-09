@@ -21,6 +21,10 @@ KLINE_COLUMNS = [
 ]
 
 
+FALLBACK_HOSTS = ("https://data-api.binance.vision", "https://api.binance.com",
+                  "https://api1.binance.com", "https://api3.binance.com")
+
+
 def to_binance_symbol(coin: str) -> str:
     return f"{coin}USDT"
 
@@ -62,15 +66,17 @@ class MarketData:
     def hourly_closes(self, coins: Iterable[str]) -> pd.DataFrame:
         """Closed hourly bars for each coin, aligned into one DataFrame (columns = coins)."""
         series = {}
+        # primary public data endpoint first, then Binance's alternate public API hosts
+        hosts = [self.base_url] + [h for h in FALLBACK_HOSTS if h != self.base_url]
         for coin in coins:
-            for attempt in range(3):
+            for attempt in range(len(hosts) * 2):
+                host = hosts[attempt % len(hosts)]
                 try:
-                    df = fetch_klines(coin, self.interval, self.history_bars, self.base_url,
-                                      session=self.session)
+                    df = fetch_klines(coin, self.interval, self.history_bars, host, session=self.session)
                     series[coin] = closed_bars_only(df)["close"]
                     break
                 except Exception as exc:  # network / HTTP errors
-                    log.warning("klines %s failed (%s), attempt %d", coin, exc, attempt + 1)
+                    log.warning("klines %s via %s failed (%s), attempt %d", coin, host, exc, attempt + 1)
                     time.sleep(1 + attempt)
         if not series:
             return pd.DataFrame()

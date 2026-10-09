@@ -181,6 +181,8 @@ class RoostooClient:
         return self._request("POST", "/v3/query_order", params, signed=True)
 
     def cancel_order(self, order_id: Optional[str] = None, pair: Optional[str] = None) -> Optional[dict]:
+        """Cancel one order (order_id), all pending orders of a pair, or with no arguments every
+        pending order of the account."""
         params = {"order_id": order_id} if order_id is not None else {"pair": pair}
         return self._request("POST", "/v3/cancel_order", params, signed=True)
 

@@ -134,6 +134,14 @@ class Bot:
         self.refresh_exchange_info()
         if not self.executor:
             raise RuntimeError("could not load exchange info")
+        if self.s.can_trade:
+            # a restart can interrupt a rebalance; resting LIMIT orders from before the restart
+            # would fill on top of freshly planned orders, so cancel them first
+            resp = self.client.cancel_order()
+            cancelled = (resp or {}).get("CanceledList") or []
+            if cancelled:
+                log.warning("cancelled %d stale pending orders on startup: %s", len(cancelled), cancelled)
+                self.db.log_decision("startup_cancel_pending", {"orders": cancelled})
         while RUNNING:
             started = time.time()
             now = utcnow()
