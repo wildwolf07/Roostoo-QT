@@ -24,7 +24,7 @@ Ground rules
 7. [x] Live monitoring script: composite score from equity log, live vs backtest tracking.
 8. [ ] Finale prep: decision log, deck outline (Oct 27 if finalist), README polish.
 
-9. [ ] Stress test on 2021-2022 (LUNA, FTX crashes, full bear market) as extra out-of-sample.
+9. [x] Stress test on 2021-2022 (LUNA, FTX crashes, full bear market) as extra out-of-sample.
 10. [ ] Finale deck outline + README final polish; tag v1.0-submission before Oct 14.
 
 ## Log
@@ -73,3 +73,7 @@ Ground rules
   Crashes: LUNA -6.7% (market -23.2%), 3AC -4.2% (-21.2%), FTX -1.5% (-18.8%).
   Weakness = prolonged bear (net long +0.31 from the long-only sleeves). Testing a slow
   market-trend filter on the long-only sleeves (research/bear_filter.py).
+- bear filter (research/bear_filter.py): turning long-only sleeves off when BTC < 50-day SMA:
+  full Sharpe 1.08 -> 1.55, max DD 28.3% -> 19.0%, 5 of 6 years better (2024 worse), BUT median
+  14-day composite 3.27 -> 1.95 (lags; misses rebounds in typical windows). Mixed evidence on the
+  contest metric => NOT adopted. Contingency only: BTC is +2.3% above its SMA50 now (filter inactive).

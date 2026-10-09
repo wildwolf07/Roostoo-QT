@@ -27,6 +27,7 @@ committed code, deployed with `deploy/deploy.sh`.
 | Market timing (breadth, funding, premium, order flow, vol ratio) | Would capture market direction | Nothing significant in both periods |
 | Tight risk overlay (CPPI 96%, 1.5–4.5% brake, 24h limit) | Lower drawdown | Whipsaw: OOS composite −0.78 vs +2.70 |
 | Per-coin trailing stops (3–8%, 6–15%, 10–25%) | Cut losers early | Sell on noise and miss recoveries; every setting lowered Sharpe in both periods |
+| Bear filter: long-only sleeves off when BTC < 50-day average | Avoid prolonged bears (2022) | Full-period Sharpe 1.08 → 1.55, but the median 14-day composite *falls* 3.27 → 1.95 (it lags and misses rebounds). Kept as a contingency |
 | Higher vol target (1.6–2.0%) | Larger returns | Composite unchanged, fatter loss tail. Kept at 1.2% unless the leaderboard demands more |
 
 ## Process safeguards
