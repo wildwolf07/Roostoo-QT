@@ -4,8 +4,8 @@
 !.env.example
 
 # runtime data
-data/
-logs/
+/data/
+/logs/
 *.db
 *.sqlite
 *.parquet
