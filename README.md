@@ -40,7 +40,7 @@ part of the backtest's 1.27 is selection luck, and every result here is conserva
 
 ![Breadth effect](docs/img/breadth.svg)
 
-### Why this strategy (full evidence in [RESEARCH.md](RESEARCH.md); every change and rejected idea in [DECISIONS.md](DECISIONS.md))
+### How we arrived at this strategy (full evidence in [RESEARCH.md](RESEARCH.md); every change and rejected idea in [DECISIONS.md](DECISIONS.md))
 1. **Literature first, then our own data.** We reviewed the crypto return-predictability
    literature (momentum, reversal, lottery/MAX, low-volatility, betting-against-beta, funding,
    order flow, lead-lag, seasonality) and tested every effect on 3.8 years of hourly data for
@@ -57,34 +57,34 @@ part of the backtest's 1.27 is selection luck, and every result here is conserva
 5. **Fees are the silent killer.** Tranching, deadbands, sleeve netting and maker-first orders
    keep turnover at ~0.18× equity per day.
 
-## 2. Architecture
+## 2. Trading engine and architecture
 
 ```
-                 ┌────────────────────────── every 60 s ───────────────────────────┐
- Roostoo API ──► │ ticker + balance ─► Portfolio (rebuilt from exchange each loop)  │
-                 │                      ├─► equity snapshot (SQLite)                │
-                 │                      └─► RiskManager: trailing stops ─► MARKET exit│
-                 └──────────────────────────────────────────────────────────────────┘
-                 ┌─────────────────────── every rebalance (hourly) ─────────────────┐
- Binance klines ►│ hourly closes ─► market_regime(BTC) ─► momentum_scores           │
-                 │   ─► target_weights (inverse-vol, vol target, caps)              │
-                 │   ─► RiskManager.exposure_multiplier (drawdown brake)        │
-                 │   ─► apply_risk ─► Executor (sells → buys, maker-first)          │
-                 └──────────────────────────────────────────────────────────────────┘
+ every 60 s   Roostoo: ticker + balance + short positions
+              └─► Portfolio rebuilt from the exchange (never from memory; restart-safe)
+                  ├─► equity snapshot → SQLite audit log
+                  └─► drawdown brake (catastrophe-only, 6–12%)
+
+ daily        Binance hourly klines (25 most liquid coins, ~500 h history)
+ 00:01 UTC    └─► features: momentum · volatility · MAX · beta   (bot/strategy/signals.py)
+                  └─► 4 sleeves → equal-weight ensemble → average of 3 daily tranches
+                      └─► Executor: reduce first (SELL / SHORT_CLOSE), then add (BUY / SHORT_OPEN)
+                          maker-first LIMIT at the touch → 3 min → re-plan → MARKET fallback
+                          (retried up to 5× on failure; 20:00 UTC safety net guarantees a daily trade)
 ```
 
 | Module | Responsibility |
 |---|---|
 | `bot/api/roostoo_client.py` | HMAC-SHA256 signing, rate limiter (≤20 calls/min vs 30 limit), retries with backoff, `Success`-flag handling, audit hook |
 | `bot/data/market_data.py` | Binance hourly klines (Roostoo has no OHLCV), ticker parsing, universe selection by 24h volume |
-| `bot/strategy/signals.py` | **Pure functions** shared by live bot and backtester: regime, momentum, sizing |
+| `bot/strategy/signals.py` | **Pure functions** shared by live bot and research backtester: features, sleeves, ensemble, tranching |
 | `bot/risk/risk_manager.py` | Drawdown brake and end-of-contest taper (CPPI cap, 24h loss limit and trailing stops available but disabled by research) |
 | `bot/execution/executor.py` | Targets → orders, precision rounding, deadbands, maker-first with market fallback |
 | `bot/storage/db.py` | SQLite audit trail: every API call, order (with reason), decision, equity snapshot |
-| `bot/main.py` | Autonomous scheduler loop with crash recovery and persisted state |
+| `bot/main.py` | Autonomous scheduler (`tick()`): minute snapshots, daily rebalance with bounded retries, persisted state |
 | `backtest/` | Event-driven hourly backtester (same strategy code as live), 14-day window parameter study |
 | `research/` | 2023→now data download (spot, order flow, funding, premium), signal lab (rank-IC in/out-of-sample), vectorised portfolio backtester, live/research parity check |
-| `tests/` | Unit tests for signing, signals, risk rules and order planning |
+| `tests/` | 24 unit tests (signing, signals, ensemble, risk, order planning, shorts, scheduler); CI on Python 3.9 and 3.12 |
 | `deploy/` | EC2 setup, systemd unit, commit-based deploy script |
 
 Tech stack: Python 3.9+, `requests`, `numpy`, `pandas`, SQLite, systemd on AWS EC2 (Sydney).
@@ -113,8 +113,8 @@ portfolio volatility of 1.2% per day, ≤30% per coin):
 now, 24h ago and 48h ago (3 tranches, each held about 3 days). Rebalanced daily at 00:00 UTC.
 Gaps below 2% of equity are skipped. Shorts use Roostoo `/v6` (fully collateralised, no leverage).
 
-**Entry / exit.** A coin enters or leaves as its sleeve membership changes. The per-position
-trailing stop exits immediately (with a 6h cooldown).
+**Entry / exit.** A coin enters or leaves as its sleeve membership changes at the daily
+rebalance. There are no per-coin stops: they lowered Sharpe in every test (see Risk management).
 
 | Key parameter | Value | Why |
 |---|---|---|
@@ -124,29 +124,48 @@ trailing stop exits immediately (with a 6h cooldown).
 | Coins per side | 4 | 3 and 5 tested; 4 is the robust middle |
 | Universe | top-25 liquid of 29 | Breadth: Sharpe 0.89 (15 coins) → 1.27 (25); PEPE/SHIB excluded (18–25 bp spreads) |
 
-## 4. Fee handling
+## 4. Fee handling (0.1% taker, 0.05% maker; shorts 0.1% to open and close)
 
-- Maker-first: buy LIMIT at best bid, sell LIMIT at best ask → 0.05% instead of 0.1%.
-  Unfilled orders are cancelled after 3 minutes and the remainder is re-planned from
-  fresh exchange state as a MARKET order.
-- Stops and emergency de-risking use MARKET orders (certainty of exit > fee saving).
-- Deadband: trades smaller than a set fraction of equity are skipped.
-- The backtester charges the full taker fee (0.1%) plus slippage on every fill, so
-  reported results are conservative.
+Fees were the main reason our first design failed, so turnover is designed down at every layer:
+- **Holding period ≈ 3 days** through 3 daily tranches: each day only a third of the book is
+  re-aimed (turnover ≈ 0.14–0.20 × equity per day).
+- **Sleeve netting**: the four sleeves are combined *before* trading, so opposite views on a
+  coin cancel out instead of paying fees twice.
+- **Deadband**: gaps under 2% of equity are not traded.
+- **Maker-first execution**: buy LIMIT at the best bid, sell LIMIT at the best ask (0.05%).
+  After 3 minutes the remainder is re-planned from fresh exchange state and sent at market.
+  About half of live limit orders fill as maker.
+- **Conservative backtests**: every simulated fill pays the 0.1% taker fee (plus slippage in
+  the event-driven engine), so live costs should come in lower than modelled.
 
-## 5. Risk management
+## 5. Backtesting methodology
+
+- **Data**: Binance hourly bars (Roostoo prices are streamed from Binance) for the 29
+  whitelisted coins, 2021-01 → 2026-10, including order flow, funding and premium for signal research.
+- **Splits**: design / in-sample 2023-01 → 2025-05, out-of-sample 2025-06 → 2026-10, and an
+  **unseen stress period 2021–22** (never used for any decision).
+- **Contest-shaped evaluation**: every 14-day window (stepped weekly), each starting fresh at
+  $100k, scored with the competition's composite (0.4 Sortino + 0.3 Sharpe + 0.3 Calmar).
+- **Rules for a change**: it must improve **both** periods, sit on a plateau (not a peak), and be
+  explainable. Most ideas failed this test; they are listed in DECISIONS.md.
+- **Overfitting control**: few variants per study, a deflated Sharpe ratio across all trials
+  (PSR 99%, DSR 64–71%), and the unseen 2021–22 stress test.
+- **Live = research**: `research/parity_check.py` proves the live code reproduces the research
+  weights (difference 8e-17), and every release is dry-run on the Roostoo test account first.
+
+## 6. Risk management
 
 | Control | Rule |
 |---|---|
-| Regime gate (available, off) | BTC trend filter on the long sleeve; disabled because it added no value in testing (RESEARCH.md §2) |
 | Volatility target | gross exposure sized for ~1.2% expected portfolio daily volatility |
 | Position cap | ≤30% of equity per coin; gross ≤95%; no leverage |
 | Drawdown brake | catastrophe-only: linear de-risking from 6% to 12% drawdown from peak (down to ×0.25). Tighter brakes whipsaw (RESEARCH.md) |
 | Trailing stop | available but **disabled**: lowered Sharpe in both periods (RESEARCH.md, tail study) |
 | Taper | final ~36h of the contest → exposure ×0.5 |
-| Operational | stale-data skip, price sanity check (±3% of ticker), order-size cap, state rebuilt from exchange every loop |
+| Diversification | 4 sleeves × 4 coins per side over 25 coins; worst single-coin day in backtest −2.1% of equity |
+| Operational | price sanity check (±3% of ticker), order-size cap, state rebuilt from the exchange every loop, stale orders cancelled on restart, data-source fallback, bounded rebalance retries |
 
-## 6. Setup and running
+## 7. Setup and running
 
 ```bash
 git clone <this repo> && cd <repo>
@@ -175,7 +194,7 @@ sudo systemctl enable --now roostoo-bot
 Every later change is deployed from a commit: `sudo bash /opt/roostoo-bot/deploy/deploy.sh`.
 Service restarts happen only to load newly committed code.
 
-## 7. Documentation map
+## 8. Documentation map
 
 | File | Contents |
 |---|---|
@@ -186,7 +205,7 @@ Service restarts happen only to load newly committed code.
 | [docs/RUNBOOK.md](docs/RUNBOOK.md) | Operations: daily check, deploy, rollback, risk switch |
 | [research/AGENDA.md](research/AGENDA.md) | Research log in chronological order |
 
-## 8. Compliance
+## 9. Compliance
 
 - All trades are generated by the bot; no manual API calls on the competition account.
 - Every order is logged with the signal reason that produced it (`orders.reason`).
