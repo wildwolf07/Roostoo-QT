@@ -52,7 +52,7 @@ brake. The worst single-coin day in the backtest is −2.1% of equity.
 Fees were the main reason v0 failed (≈ the size of its losses). Now: a ~3-day holding period
 via 3 daily tranches (turnover ≈ 0.14–0.20× equity per day), a 2% deadband, sleeve netting before
 trading, and maker-first limit orders (0.05% vs 0.1%; live maker share ~50%). Backtests charge
-the **taker** fee on every fill, which is conservative.
+the **taker** fee on every fill, which is conservative. Sensitivity: Sharpe 1.52 at all-maker 0.05%, 1.27 at 0.1%, 0.75 at 0.2%; break-even is around 0.35% per unit traded.
 
 ### 8. "How do you know the live bot trades what the backtest tested?"
 A **parity test** (`research/parity_check.py`) recomputes every sleeve with the live code at

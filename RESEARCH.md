@@ -282,3 +282,18 @@ cutoff ≥ 5% → out of reach for this strategy at any responsible exposure.
 Plan B is `sleeve_weights = (0, 0.5, 0, 0.5)` and `target_daily_vol = 0.016`. It roughly triples
 P(return ≥ 5%) for a modest composite cost, but it is net long the market. Use it only if
 the leaderboard requires it.
+
+**Cost sensitivity** (live ensemble, 2023–26; turnover 0.196× equity per day, so a 0.1% fee costs
+about 7.2% a year):
+
+| Cost per unit traded | Sharpe (full / IS / OOS) | Return | Median 14d composite (IS / OOS) |
+|---|---|---|---|
+| 0% | 1.78 / 1.37 / 2.47 | +140% | 3.45 / 5.15 |
+| 0.05% (all maker) | 1.52 / 1.10 / 2.22 | +110% | 2.62 / 4.42 |
+| 0.075% (realistic mix) | 1.40 / 0.97 / 2.09 | +97% | 2.23 / 4.22 |
+| **0.10% (reported, all taker)** | **1.27 / 0.84 / 1.97** | **+84%** | **1.84 / 4.02** |
+| 0.15% | 1.01 / 0.58 / 1.72 | +62% | 1.19 / 3.64 |
+| 0.20% | 0.75 / 0.32 / 1.46 | +42% | 0.62 / 3.22 |
+| 0.30% | 0.23 / −0.21 / 0.96 | +9% | −0.85 / 1.74 |
+
+The edge survives twice the taker fee, and break-even is around 0.35%.
