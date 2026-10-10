@@ -1,3 +1,27 @@
+# Research summary (TL;DR)
+
+**Live configuration (v2.1):** an equal-weight ensemble of 4 sleeves (momentum long/short
+beta-neutral, momentum long-only, filtered momentum long/short, low-risk long-only) on the 25
+most liquid of 29 coins. 168h/336h momentum, 3 daily tranches (~3-day holding period), 1.2%
+daily volatility target, catastrophe-only 6–12% drawdown brake, no per-coin stops,
+maker-first execution.
+
+| Evidence | Result |
+|---|---|
+| 2023-01 → 2026-10, fees included | +84%, Sharpe 1.27, max drawdown 16.9%, every calendar year positive |
+| Unseen 2021–22 (LUNA, 3AC, FTX) | +19.8% while BTC fell −49.2% |
+| 14-day windows, out-of-sample | median composite 4.0, 67% positive |
+| Statistical confidence | PSR 99%, deflated Sharpe 64–71% |
+| Live code = research code | parity difference 8e-17 |
+
+How we got here: v0 (fast trend) failed → IC diagnosis → v1 (slow momentum) → 3.8-year
+literature-driven signal study → v2 ensemble → overlay, breadth, stop, tail, stress and
+statistics checks → v2.1. Rejected ideas and their numbers are in DECISIONS.md.
+
+The sections below are the chronological lab notebook.
+
+---
+
 # Research Log: how the live strategy was chosen
 
 All tests use Binance hourly data (Roostoo prices are streamed from Binance), 26 liquid

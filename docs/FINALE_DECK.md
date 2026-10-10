@@ -45,10 +45,10 @@ Ablation: removing any sleeve hurts one test period.
 
 ### 8. Risk management that we *tested*
 - Crash chart: LUNA −6.7% vs market −23%; FTX −1.5% vs −19%; Oct-2025 −2.3% vs −21%.
-- What we removed because the data said so: tight CPPI and drawdown brakes (whipsaw: composite
-  −0.78 vs +2.70) and per-coin stops (Sharpe 1.27 → 0.75).
-- What stays: a loose 2.5–7% portfolio drawdown brake, position caps, no leverage, and a taper
-  over the last 1.5 days.
+- What we removed because the data said so: tight CPPI and drawdown brakes (whipsaw: OOS median
+  14-day composite 0.94 vs 5.00 with no overlay) and per-coin stops (Sharpe 1.27 → 0.75).
+- What stays: a catastrophe-only 6–12% drawdown brake (free insurance: same median score as none,
+  smaller worst case), position caps, no leverage, and a taper over the last 1.5 days.
 
 ### 9. Live results vs expectation
 - Live equity curve plus daily returns (`scripts/daily_report.py`).
