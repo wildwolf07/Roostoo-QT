@@ -147,3 +147,15 @@ Ground rules
   stretches but halve P(finalist) (62-68% -> 26-30%) and do not raise P(#1 composite in India).
   Rejected. Note: a restart does not rebalance (last_rebalance_hour persists), so the lock-in
   deployed at 17:48 UTC takes effect at the Oct 11 00:01 UTC rebalance.
+
+## Oct 11 (00:30-03:00 IST): real India field
+- Rules re-read (organiser page): regions are separate (finalists AND prizes per region); 8 active
+  days with trades each day (if counted in HKT our live days are exactly Oct 10-17 = 8, zero slack);
+  no HFT / market making / arbitrage; spot 1x long/short, no leverage; judges pick the top 3 at the
+  finale with their own criteria.
+- India field (Oct 10 20:55 UTC): 107 +1.8, 109 +1.3, us +1.1, 145 +0.6, 180 +0.4, 139 0.0, then
+  -0.4 ... India #20 at -5.2%. P(top 20) = 100% for every non-gambling plan.
+- endgame.py (+ P(#1 comp), floors 0.15/0.10): P(top5 comp) 1x 62%, floor .25 90%, .15 93-94%,
+  .10 95-96%; P(#1) 9% / 21-23% / 27-32% / 31-40%. Adopted floor 0.15 (keeps a tradeable book).
+- Safety net 20:00 -> 12:00 UTC (same calendar day in UTC/HKT/IST). Deadband floor 0.25 -> 0.1.
+- Moonshot on the real field: all-in volatile coin P(top5 comp) 39%, P(#1) 20% vs lock-in 90%/23%.

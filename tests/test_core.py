@@ -266,6 +266,17 @@ class TestSchedulerRetry(unittest.TestCase):
         self.assertEqual(len(calls), MAX_REBALANCE_ATTEMPTS)
         self.assertEqual(bot.last_rebalance_hour, "2026-10-10T00")
 
+    def test_safety_net_trades_by_noon_utc(self):
+        from bot.main import FORCE_HOUR_UTC
+        bot, calls = self.make_bot([True] * 5)
+        bot.last_rebalance_hour = "2026-10-11T00"
+        bot.last_fill_day = "2026-10-10"                                  # nothing filled on Oct 11 yet
+        bot.tick(datetime(2026, 10, 11, FORCE_HOUR_UTC - 1, 30, tzinfo=timezone.utc))
+        self.assertEqual(calls, [])
+        bot.tick(datetime(2026, 10, 11, FORCE_HOUR_UTC, 1, tzinfo=timezone.utc))
+        self.assertEqual(len(calls), 1)
+        self.assertLessEqual(FORCE_HOUR_UTC, 15)                          # before the HKT day ends (16:00 UTC)
+
     def test_only_scheduled_hour_rebalances(self):
         bot, calls = self.make_bot([True] * 5)
         bot.tick(datetime(2026, 10, 10, 5, 3, tzinfo=timezone.utc))      # not scheduled, fills today
@@ -295,7 +306,7 @@ class TestHourlyStep(unittest.TestCase):
         pf = Portfolio(usd_free=101_000, usd_total=101_000, values={})
         seen = []
         bot.executor = type("E", (), {"rebalance": lambda self, t, deadband=None, **k: seen.append(deadband) or 0})()
-        for equity, band in ((100_000, 0.02), (101_000, 0.005)):
+        for equity, band in ((100_000, 0.02), (101_000, 0.003)):
             bot.risk = RiskManager(RiskConfig(lockin_start=NOW), initial_equity=100_000)
             pf.usd_free = pf.usd_total = equity
             self.assertTrue(bot.hourly_step(NOW, pf, ticker))

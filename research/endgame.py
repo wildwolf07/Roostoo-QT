@@ -53,6 +53,8 @@ POLICIES = {
     "L2  lock-in 1x->0.35x by +2%": k_lockin(0.02, 0.35),
     "L3  lock-in 1x->0.25x by +1.5%": k_lockin(0.015, 0.25),
     "L4  lock-in 1x->0.25x by +1%": k_lockin(0.01, 0.25),
+    "L5  lock-in 1x->0.15x by +1%": k_lockin(0.01, 0.15),
+    "L6  lock-in 1x->0.10x by +1%": k_lockin(0.01, 0.10),
 }
 
 
@@ -152,7 +154,7 @@ def main() -> None:
     field = np.array(args.field) if args.field else None
     rows, comp_q = [], {}
     for label, policy in POLICIES.items():
-        finals, comps, top20, top5 = [], {v: [] for v in ("daily", "hourly", "daily-active", "raw")}, [], []
+        finals, comps, top20, top5, top1 = [], {v: [] for v in ("daily", "hourly", "daily-active", "raw")}, [], [], []
         for s in starts:
             eq = list(past)
             e, k = eq[-1], 1.0
@@ -176,11 +178,9 @@ def main() -> None:
                     above = R > eq[-1] - 1
                     in20 = above.sum() < 20
                     top20.append(in20)
-                    if in20:
-                        idx = np.argsort(-R)[:19]
-                        top5.append((C[idx] > sc["daily"]).sum() < 5)
-                    else:
-                        top5.append(False)
+                    better = (C[np.argsort(-R)[:19]] > sc["daily"]).sum() if in20 else 99
+                    top5.append(better < 5)
+                    top1.append(better == 0)
         f = np.array(finals)
         row = {"policy": label, "median R": f"{np.median(f):+.2%}", "p5 R": f"{np.percentile(f, 5):+.2%}",
                "P(R<0)": f"{(f < 0).mean():.0%}", "P(R<0.5%)": f"{(f < 0.005).mean():.0%}",
@@ -190,6 +190,7 @@ def main() -> None:
         if field is not None:
             row["P(top20)"] = f"{np.mean(top20):.0%}"
             row["P(top5 comp)"] = f"{np.mean(top5):.0%}"
+            row["P(#1 comp)"] = f"{np.mean(top1):.0%}"
         rows.append(row)
         comp_q[label] = np.percentile(comps["daily"], np.arange(5, 100, 5))
     pd.set_option("display.width", 300)

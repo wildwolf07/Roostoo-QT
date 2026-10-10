@@ -2,7 +2,9 @@
 
 Every minute    : ticker + balance + short positions -> equity snapshot, drawdown brake
 Daily 00:01 UTC : hourly bars -> 4-sleeve ensemble targets -> rebalance (retried up to 5x)
-Daily 20:00 UTC : safety net - if nothing traded today, rebalance with no deadband
+Daily 12:00 UTC : safety net - if nothing traded today, rebalance with no deadband
+                  (12:00 UTC is 20:00 HKT and 17:30 IST, so the trade lands on the same calendar day
+                  whichever time zone the organisers use to count the 8 active trading days)
 
 Run:  python -m bot.main            (MODE from .env: paper | test | live)
 """
@@ -27,6 +29,7 @@ from bot.strategy.signals import apply_risk, compute_base_weights, hourly_vol, m
 log = logging.getLogger("bot")
 RUNNING = True
 MAX_REBALANCE_ATTEMPTS = 5   # a scheduled rebalance is retried each minute up to this many times
+FORCE_HOUR_UTC = 12          # daily safety net: trade by then if nothing has filled today (8-active-day rule)
 
 
 def setup_logging(settings: Settings) -> None:
@@ -127,7 +130,7 @@ class Bot:
             n = self.executor.rebalance(targets, deadband=0.0, reason="daily rebalance", min_order_usd=50.0)
         else:
             # the deadband is sized for a full book; scale it with exposure so a de-risked book still tracks
-            band = self.s.execution.deadband_frac * min(1.0, max(risk_mult, 0.25))
+            band = self.s.execution.deadband_frac * min(1.0, max(risk_mult, 0.1))
             n = self.executor.rebalance(targets, deadband=band, reason=f"scheduled rebalance [{regime.label}]")
         if n:
             self.last_fill_day = now.date().isoformat()
@@ -148,7 +151,7 @@ class Bot:
             hour_key = now.strftime("%Y-%m-%dT%H")
             today = now.date().isoformat()
             if hour_key != self.last_rebalance_hour and now.minute >= 1:
-                force = now.hour >= 20 and self.last_fill_day != today
+                force = now.hour >= FORCE_HOUR_UTC and self.last_fill_day != today
                 first_run = self.last_rebalance_hour is None
                 scheduled = int(now.timestamp() // 3600) % self.s.strategy.rebalance_hours == 0
                 done = True

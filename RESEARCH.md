@@ -430,3 +430,19 @@ stretches (three hypothetical India fields):
 Gambling halves the chance of being a finalist and does not raise the chance of finishing #1 in the
 region. Finalists and prizes are per region, so a team in another region at +37% is not our
 competition for a finalist place. **Not adopted.**
+
+**Update on the real India field (Oct 11).** The leaderboard at Oct 10, 20:55 UTC: India #1 +1.8%,
+#2 +1.3%, **us #3 at +1.1%**, then +0.6%, +0.4%, about 0%, and everyone else negative. India #20 is
+at −5.2%. Negative returns mean negative ratios, so only the handful of positive teams compete with us
+on the composite.
+
+| Policy | Median return | P(return < 0) | P(top 20) | P(top 5 by composite) | P(#1 by composite) |
+|---|---|---|---|---|---|
+| 1× | +1.28% | 20% | 100% | 62% | 9% |
+| Lock-in, floor 0.25× | +1.19% | 4% | 100% | 90% | 21–23% |
+| **Lock-in, floor 0.15× (adopted)** | **+1.15%** | **3%** | **100%** | **93–94%** | **27–32%** |
+| Lock-in, floor 0.10× | +1.12% | 2% | 100% | 95–96% | 31–40% |
+| All-in, most volatile coin (moonshot) | −0.47% | 51% | 66% | 39% | 20% |
+
+Ranges cover a 0.11% vs 0.4% max drawdown so far. A deeper floor still helps a little, but below
+0.15× the book becomes too small to trade meaningfully every day, so 0.15× is the floor.

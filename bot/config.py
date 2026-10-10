@@ -118,7 +118,7 @@ class RiskConfig:
     # shrinks, because a team below the top-20 return cut needs return more than a smooth curve.
     lockin_start: datetime = datetime(2026, 10, 10, 12, 0, tzinfo=timezone.utc)
     lockin_full_at: float = 0.01       # contest return at which the minimum multiplier is reached (0 = off)
-    lockin_min_mult: float = 0.25
+    lockin_min_mult: float = 0.15     # research/endgame.py on the real India field (Oct 11)
 
 
 @dataclass(frozen=True)
