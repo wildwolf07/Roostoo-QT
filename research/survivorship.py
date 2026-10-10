@@ -20,11 +20,11 @@ from research.xs_backtest import Variant, build_tranched
 BROAD = ROOT / "data" / "research_broad"
 
 
-def broad_panel(close: pd.DataFrame, qv: pd.DataFrame):
+def broad_panel(close: pd.DataFrame, qv: pd.DataFrame, only: tuple | None = None):
     c, q = dict(close.items()), dict(qv.items())
     for f in sorted(BROAD.glob("spot_*.parquet")):
         coin = f.stem.split("_", 1)[1]
-        if coin in c:
+        if coin in c or (only is not None and coin not in only):
             continue
         d = pd.read_parquet(f)
         c[coin] = d["close"].reindex(close.index)
@@ -32,12 +32,12 @@ def broad_panel(close: pd.DataFrame, qv: pd.DataFrame):
     return pd.DataFrame(c), pd.DataFrame(q)
 
 
-def run(close: pd.DataFrame, qv: pd.DataFrame, label: str) -> dict:
+def run(close: pd.DataFrame, qv: pd.DataFrame, label: str, universe: int | None = None) -> dict:
     empty = pd.DataFrame(index=close.index)
     f = features(close, qv, qv * 0.5, empty, empty)
     feats = {k: f[k] for k in ("vol_72h", "max_ret_24h", "beta_btc", "mom_blend_168_336")}
     mom = (("mom_blend_168_336", 1.0),)
-    c = dict(rebalance_h=72, tranches=3, n_side=4, universe=StrategyConfig().universe_size)
+    c = dict(rebalance_h=72, tranches=3, n_side=4, universe=universe or StrategyConfig().universe_size)
     sleeves = [Variant("a", signals=mom, **c), Variant("b", signals=mom, long_only=True, beta_neutral=False, **c),
                Variant("c", signals=mom, long_max_rank=0.7, short_vol_rank=0.6, **c), Variant("d", long_only=True, **c)]
     W = sum(build_tranched(v, (close, qv), feats) for v in sleeves) / 4

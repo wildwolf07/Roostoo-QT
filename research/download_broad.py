@@ -27,10 +27,18 @@ def one(coin: str) -> str:
     return f"{coin}: {len(df)} bars {df.index[0].date()} -> {df.index[-1].date()}"
 
 
+# Roostoo-tradable coins outside the whitelist with spread < ~5bp and Binance history
+ROOSTOO_EXTRA = ("ONDO", "POL", "PENGU", "PUMP", "ASTER", "VIRTUAL", "SEI", "CAKE", "FLOKI", "ZEN", "CFX",
+                 "WIF", "TRUMP", "XPL")
+
+
 def main() -> None:
+    import sys
     OUT.mkdir(parents=True, exist_ok=True)
+    coins = ROOSTOO_EXTRA if "--roostoo" in sys.argv else EXTRA
+    coins = [c for c in coins if not (OUT / f"spot_{c}.parquet").exists()]
     with ThreadPoolExecutor(max_workers=4) as pool:
-        for msg in pool.map(one, EXTRA):
+        for msg in pool.map(one, coins):
             print(msg, flush=True)
 
 

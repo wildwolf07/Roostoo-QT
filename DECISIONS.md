@@ -34,6 +34,7 @@ committed code, deployed with `deploy/deploy.sh`.
 | Residual (idiosyncratic) momentum | Better on 2023–26 (Sharpe 1.27 → 1.53) | Worse on unseen 2021–22 (median 14d composite 2.73 → 1.59) |
 | Volatility-managed scaling (Moreira–Muir) | Classic Sharpe booster for momentum | Full Sharpe 1.08 → 0.73–1.00, worse 2022, higher max DD |
 | End-of-contest taper removal / 2% deadband changes | Small score gains | Mixed across periods, so unchanged |
+| Add 14 more Roostoo coins (ONDO, PENGU, SEI, …) | Breadth helped in the survivorship test | Better recent OOS, but worse 2021–22 and full Sharpe (0.92–1.00 vs 1.08) |
 | Higher vol target (1.6–2.0%) | Larger returns | Composite unchanged, fatter loss tail. Kept at 1.2% unless the leaderboard demands more |
 
 ## Process safeguards

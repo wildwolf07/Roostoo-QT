@@ -354,3 +354,19 @@ under its old ticker, and returns after a delisting are treated as flat.
 
 P(Sharpe ≤ 0) = 1.1%, consistent with the PSR of 99%. The edge is very likely positive, but
 its size is uncertain by an order of magnitude.
+
+**Whitelist expansion with other Roostoo coins** (`research/whitelist_expansion.py`; 14 extra
+Roostoo-tradable coins with spreads under ~5 bp: ONDO, POL, PENGU, PUMP, ASTER, VIRTUAL, SEI, CAKE,
+FLOKI, ZEN, CFX, WIF, TRUMP, XPL):
+
+| Variant (2021–26) | Full Sharpe | 2021–22 / IS / OOS 14d composite | 2026 Sharpe |
+|---|---|---|---|
+| Current 29, top 25 (live) | 1.08 | 2.73 / 2.84 / 4.00 | 0.94 |
+| Current 29, all 29 | 1.19 | 2.73 / 2.77 / 5.06 | 0.80 |
+| 29 + extras, top 25 | 0.92 | −0.09 / 1.52 / 4.48 | 1.08 |
+| 29 + extras, top 30 | 0.99 | −0.09 / 1.74 / 5.59 | 1.15 |
+| 29 + extras, top 35 | 1.00 | −0.09 / 3.38 / 6.91 | 0.49 |
+
+The extras help the recent OOS period but hurt 2021–22 (small caps CAKE/ZEN/CFX) and the
+full-period Sharpe; the newest listings have only about a year of data. **Not adopted.** Using all
+29 current coins is marginally better but within noise, so universe 25 is unchanged.
