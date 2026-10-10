@@ -297,3 +297,18 @@ about 7.2% a year):
 | 0.30% | 0.23 / −0.21 / 0.96 | +9% | −0.85 / 1.74 |
 
 The edge survives twice the taker fee, and break-even is around 0.35%.
+
+**Alpha decay: why a ~3-day holding period.** This is the forward return of each day's target
+book, gross of fees, over different holding horizons (bps):
+
+| Horizon | Total IS / OOS | Per day IS / OOS |
+|---|---|---|
+| 6h | 0.2 / 1.5 | 0.7 / 5.8 |
+| 1 day | 3.3 / 8.7 | 3.3 / 8.7 |
+| 3 days | 10.1 / 21.0 | 3.4 / 7.0 |
+| 7 days | 27.4 / 28.2 | 3.9 / 4.0 |
+| 14 days | 61.1 / 30.4 | 4.4 / 2.2 |
+
+The signal keeps paying for one to two weeks. Out of sample, the per-day payoff is front-loaded
+(about 7–9 bps a day over the first three days) and fades afterwards. Re-aiming a third of the
+book each day (a ~3-day hold) captures the fresh alpha while keeping fees at ~0.2× equity a day.

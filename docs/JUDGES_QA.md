@@ -19,8 +19,7 @@ Sharpe to be **lower** than the backtest's 1.27, and we say so in the README.
 It is a documented factor (Liu, Tsyvinski & Wu, *J. Finance* 2022), usually attributed to
 gradual information diffusion and attention-driven flows. In our data, rank IC is positive at 1–3
 day horizons for 7–14 day lookbacks, while 1–24h lookbacks **mean-revert** (IC −0.03, t ≈ −14),
-which is why our first, fast design failed. We hold for about 3 days, which is where the signal
-lives and fees don't kill it.
+which is why our first, fast design failed. We hold for about 3 days. The alpha-decay curve shows the book's forward return is front-loaded out of sample (about 7–9 bps a day over the first 3 days, about 2 bps a day by week two), so a 3-day hold captures the fresh signal while keeping fees down.
 
 ### 3. "Why is the low-risk sleeve long-only? The anomaly is long/short in the literature."
 Because **IC ≠ P&L** with fat tails. Shorting high-volatility / lottery-like coins has a
