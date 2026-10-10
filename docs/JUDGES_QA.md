@@ -68,8 +68,7 @@ smallest ones. PEPE and SHIB are excluded for 18–25 bp tick-size spreads.
 ### 10. "What would you do with more time or capital?"
 (a) Real execution research with order-book data (maker queue position, adverse selection);
 (b) a survivorship-free universe (include delisted coins); (c) regime-conditional sleeve
-weights estimated out of sample; (d) capacity analysis (our sizes are small relative to Binance
-volume; the mock exchange has no market impact, so a real deployment needs impact modelling).
+weights estimated out of sample; (d) capacity: at $100k our median order is 0.0015% of a coin's daily volume. At $10M the 95th percentile reaches ~2% of daily volume in the smallest coins, so beyond a few million we would add volume-weighted position limits and impact modelling (the mock exchange has no impact).
 
 ### 11. "Why didn't you use ML / LLMs?"
 With about 30 assets, a few years of data and weak signals (IC ≈ 0.02–0.07), model complexity

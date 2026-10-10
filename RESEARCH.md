@@ -312,3 +312,17 @@ book, gross of fees, over different holding horizons (bps):
 The signal keeps paying for one to two weeks. Out of sample, the per-day payoff is front-loaded
 (about 7–9 bps a day over the first three days) and fades afterwards. Re-aiming a third of the
 book each day (a ~3-day hold) captures the fresh alpha while keeping fees at ~0.2× equity a day.
+
+**Capacity:** our order size divided by the coin's trailing 24h Binance volume, per traded
+coin-rebalance.
+
+| Fund size | Median | 95th percentile | Max |
+|---|---|---|---|
+| $100k (contest) | 0.0015% | 0.02% | 0.27% |
+| $1M | 0.015% | 0.21% | 2.7% |
+| $10M | 0.15% | 2.1% | 27% |
+| $100M | 1.5% | 21% | 272% |
+
+Market impact is negligible at contest size and small up to a few million dollars. From about
+$5–10M the smallest coins (ZEC, XLM, PENDLE, ICP, CRV: $5–12M daily volume) would need
+volume-weighted position limits.
