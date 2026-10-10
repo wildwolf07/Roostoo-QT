@@ -193,5 +193,61 @@ class TestEnsemble(unittest.TestCase):
         self.assertNotIn("ETH", w)
 
 
+class TestSchedulerRetry(unittest.TestCase):
+    """Bot.tick: a failed scheduled rebalance is retried each minute, at most MAX_REBALANCE_ATTEMPTS."""
+
+    def make_bot(self, outcomes):
+        import time as _time
+        from bot import main as m
+
+        bot = m.Bot.__new__(m.Bot)
+        bot.s = Settings(mode="paper", api_key="k", api_secret="s")
+        bot.last_info_refresh = _time.time()
+        bot.last_rebalance_hour = "2026-10-09T23"
+        bot.last_fill_day = "2026-10-10"
+        bot.rebalance_attempts = {}
+        bot.persist = lambda: None
+        bot.minute_step = lambda now: ("pf", "ticker")
+        calls = []
+
+        def hourly_step(now, pf, ticker, force_daily=False):
+            calls.append(now)
+            out = outcomes[len(calls) - 1] if len(calls) <= len(outcomes) else True
+            if isinstance(out, Exception):
+                raise out
+            return out
+        bot.hourly_step = hourly_step
+
+        class _DB:
+            def log_decision(self, *a, **k):
+                pass
+        bot.db = _DB()
+        return bot, calls
+
+    def test_retries_until_success(self):
+        bot, calls = self.make_bot([False, RuntimeError("binance down"), True])
+        for minute in range(1, 6):
+            bot.tick(datetime(2026, 10, 10, 0, minute, tzinfo=timezone.utc))
+        self.assertEqual(len(calls), 3)
+        self.assertEqual(bot.last_rebalance_hour, "2026-10-10T00")
+
+    def test_stands_down_after_max_attempts(self):
+        from bot.main import MAX_REBALANCE_ATTEMPTS
+        bot, calls = self.make_bot([False] * 20)
+        for minute in range(1, 20):
+            bot.tick(datetime(2026, 10, 10, 0, minute, tzinfo=timezone.utc))
+        self.assertEqual(len(calls), MAX_REBALANCE_ATTEMPTS)
+        self.assertEqual(bot.last_rebalance_hour, "2026-10-10T00")
+
+    def test_only_scheduled_hour_rebalances(self):
+        bot, calls = self.make_bot([True] * 5)
+        bot.tick(datetime(2026, 10, 10, 5, 3, tzinfo=timezone.utc))      # not scheduled, fills today
+        self.assertEqual(calls, [])
+        bot.tick(datetime(2026, 10, 11, 0, 0, tzinfo=timezone.utc))      # minute 0: waits for closed bar
+        self.assertEqual(calls, [])
+        bot.tick(datetime(2026, 10, 11, 0, 1, tzinfo=timezone.utc))
+        self.assertEqual(len(calls), 1)
+
+
 if __name__ == "__main__":
     unittest.main()

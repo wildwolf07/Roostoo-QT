@@ -1,8 +1,8 @@
 """Bot entry point: an autonomous loop, no manual input.
 
-Every minute : ticker + balance -> equity snapshot, risk update, trailing stops
-Every hour   : hourly bars -> regime + momentum -> target weights -> rebalance
-Every day    : guarantee strategy-driven activity (tight-deadband rebalance)
+Every minute    : ticker + balance + short positions -> equity snapshot, drawdown brake
+Daily 00:01 UTC : hourly bars -> 4-sleeve ensemble targets -> rebalance (retried up to 5x)
+Daily 20:00 UTC : safety net - if nothing traded today, rebalance with no deadband
 
 Run:  python -m bot.main            (MODE from .env: paper | test | live)
 """
@@ -26,6 +26,7 @@ from bot.strategy.signals import apply_risk, compute_base_weights, hourly_vol, m
 
 log = logging.getLogger("bot")
 RUNNING = True
+MAX_REBALANCE_ATTEMPTS = 5   # a scheduled rebalance is retried each minute up to this many times
 
 
 def setup_logging(settings: Settings) -> None:
@@ -55,6 +56,7 @@ class Bot:
         self.last_rebalance_hour = self.db.get_kv("last_rebalance_hour")
         self.last_fill_day = self.db.get_kv("last_fill_day")
         self.last_info_refresh = 0.0
+        self.rebalance_attempts: dict = {}    # hour_key -> failed attempts (retry a few times, then stand down)
 
     # ------------------------------------------------------------ helpers
     def refresh_exchange_info(self) -> None:
@@ -103,9 +105,9 @@ class Bot:
         universe = select_universe(ticker, cfg.whitelist, cfg.universe_size, must_include=("BTC", cfg.core_asset))
         closes = self.data.hourly_closes(universe)
         if closes.empty or "BTC" not in closes:
-            log.error("no market history available; skipping rebalance (stops remain active)")
+            log.error("no market history available; rebalance will be retried next minute")
             self.db.log_decision("skip_rebalance", {"reason": "no market data"})
-            return
+            return False
         closes = closes.dropna(axis=1, thresh=len(closes) // 2)
         vol_d = hourly_vol(closes, cfg.vol_lookback) * (24 ** 0.5)
         self.risk.state.asset_daily_vol.update({c: float(v) for c, v in vol_d.dropna().items()})
@@ -127,6 +129,44 @@ class Bot:
             n = self.executor.rebalance(targets, reason=f"scheduled rebalance [{regime.label}]")
         if n:
             self.last_fill_day = now.date().isoformat()
+        return True
+
+    def tick(self, now: datetime) -> None:
+        """One loop iteration: snapshot/risk every call; the strategy rebalance when it is due."""
+        if time.time() - self.last_info_refresh > 6 * 3600:
+            self.client.sync_time()
+            self.refresh_exchange_info()
+        if now > self.s.runtime.live_end and self.s.mode == "live":
+            log.info("competition window over; idling")
+            self.persist()
+            return
+        snap = self.minute_step(now)
+        if snap:
+            pf, ticker = snap
+            hour_key = now.strftime("%Y-%m-%dT%H")
+            today = now.date().isoformat()
+            if hour_key != self.last_rebalance_hour and now.minute >= 1:
+                force = now.hour >= 20 and self.last_fill_day != today
+                first_run = self.last_rebalance_hour is None
+                scheduled = int(now.timestamp() // 3600) % self.s.strategy.rebalance_hours == 0
+                done = True
+                if first_run or force or scheduled:
+                    try:
+                        done = bool(self.hourly_step(now, pf, ticker, force_daily=force))
+                    except Exception:
+                        log.exception("rebalance attempt failed")
+                        self.db.log_decision("error", {"where": "rebalance", "hour": hour_key})
+                        done = False
+                    if not done:
+                        tries = self.rebalance_attempts.get(hour_key, 0) + 1
+                        self.rebalance_attempts = {hour_key: tries}
+                        if tries >= MAX_REBALANCE_ATTEMPTS:
+                            log.error("rebalance for %s failed %d times; standing down until the next "
+                                      "scheduled time", hour_key, tries)
+                            done = True
+                if done:
+                    self.last_rebalance_hour = hour_key
+        self.persist()
 
     def run(self) -> None:
         log.info("starting bot in %s mode", self.s.mode.upper())
@@ -144,27 +184,8 @@ class Bot:
                 self.db.log_decision("startup_cancel_pending", {"orders": cancelled})
         while RUNNING:
             started = time.time()
-            now = utcnow()
             try:
-                if time.time() - self.last_info_refresh > 6 * 3600:
-                    self.client.sync_time()
-                    self.refresh_exchange_info()
-                if now > self.s.runtime.live_end and self.s.mode == "live":
-                    log.info("competition window over; idling")
-                else:
-                    snap = self.minute_step(now)
-                    if snap:
-                        pf, ticker = snap
-                        hour_key = now.strftime("%Y-%m-%dT%H")
-                        today = now.date().isoformat()
-                        if hour_key != self.last_rebalance_hour and now.minute >= 1:
-                            force = now.hour >= 20 and self.last_fill_day != today
-                            first_run = self.last_rebalance_hour is None
-                            scheduled = int(now.timestamp() // 3600) % self.s.strategy.rebalance_hours == 0
-                            if first_run or force or scheduled:
-                                self.hourly_step(now, pf, ticker, force_daily=force)
-                            self.last_rebalance_hour = hour_key
-                self.persist()
+                self.tick(utcnow())
             except Exception:
                 log.exception("loop iteration failed; continuing")
                 self.db.log_decision("error", {"where": "main loop"})
