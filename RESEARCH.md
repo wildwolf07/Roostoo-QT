@@ -4,7 +4,8 @@
 beta-neutral, momentum long-only, filtered momentum long/short, low-risk long-only) on the 25
 most liquid of 29 coins. 168h/336h momentum, 3 daily tranches (~3-day holding period), 1.2%
 daily volatility target, catastrophe-only 6–12% drawdown brake, no per-coin stops,
-maker-first execution.
+maker-first execution. **Endgame lock-in** (from Oct 10): exposure ×1 → ×0.25 as the banked contest
+return goes 0 → +1%, because the finalists' score is a ratio over the window (last section).
 
 | Evidence | Result |
 |---|---|
@@ -370,3 +371,47 @@ FLOKI, ZEN, CFX, WIF, TRUMP, XPL):
 The extras help the recent OOS period but hurt 2021–22 (small caps CAKE/ZEN/CFX) and the
 full-period Sharpe; the newest listings have only about a year of data. **Not adopted.** Using all
 29 current coins is marginally better but within noise, so universe 25 is unchanged.
+
+
+## Endgame: how much risk to run once a gain is banked (2026-10-10 evening)
+
+**The selection funnel.** Compliance → top 20 per region **by return** → ranked by
+0.4 Sortino + 0.3 Sharpe + 0.3 Calmar → code review → top 5 per region (15 finalists). Return is
+a gate; the composite among the top 20 decides.
+
+**The insight.** Sharpe, Sortino and Calmar are scale-free only while nothing is banked. Take a
+window score where a gain B is already in the numerator and future exposure is k: roughly
+(B + k·μ) / (k·σ). As k falls, the score rises, because the banked gain no longer needs future risk
+to justify it. The same holds for Sortino (downside deviation ∝ k) and Calmar (future drawdown ∝ k).
+Tournament theory points the same way: leaders cut risk and laggards add it (Brown, Harlow & Starks
+1996; Chevalier & Ellison 1997; Browne 1999).
+
+**Test** (`research/endgame.py`): 5,350 historical 7.3-day stretches of the live ensemble (fees
+included), appended to our real contest path (flat until we went live on Oct 9 22:00 UTC, +1.0%
+banked by Oct 10). The organisers have not published the formula, so we score four readings of it:
+daily returns from Oct 4; hourly returns; daily returns over active days only; and no
+annualisation.
+
+| Policy (from the next rebalance) | Median return | P(return < 0) | P(< +0.5%) | Composite p25 / median (daily) | Higher than 1× at every quantile |
+|---|---|---|---|---|---|
+| 1× (previous live) | +1.20% | 22% | 33% | 0.8 / 10.6 | — |
+| 1.33× | +1.23% | 27% | 36% | −0.8 / 8.4 | no (11%) |
+| 0.5× | +1.07% | 11% | 25% | 6.3 / 17.7 | yes |
+| 0.25× | +1.01% | 3% | 17% | 14.3 / 28.7 | yes |
+| **Lock-in 1× → 0.25× as banked 0 → +1% (adopted)** | **+1.15%** | **8%** | **14%** | **14.0 / 30.0** | **yes** |
+
+The ordering is the same under all four formula readings. The state-dependent rule beats a fixed
+0.25×: it keeps full risk when nothing is banked (banked 0%: median composite 5.8 vs 1.6 for 1×),
+and it re-risks if the gain shrinks.
+
+**Funnel model.** Three hypothetical India fields consistent with the Oct 10 leaderboard (2 teams
+above us, the rest below +0.8%, some inactive). Each competitor's volatility and market beta are
+calibrated from how far they have moved so far. Their past path is simulated to end at their
+current return, and their composite uses the same formula. P(top 20 by return): 1× 79–89%,
+lock-in 83–87%. **P(top 20 and top 5 by composite): 1× 33–41% → lock-in 62–67%.** These field
+numbers are illustrative: the real India list would replace them (`--field`). But the direction
+does not depend on the field, because our own score distribution improves at every quantile.
+
+**Adopted** (DECISIONS.md #11): `RiskConfig.lockin_*`, and the rebalance deadband now scales with
+exposure (floor 0.25) so the smaller book still tracks its targets. Unit-tested. Daily trading
+continues: signals and rebalancing are unchanged, only the position size is smaller.

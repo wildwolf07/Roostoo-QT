@@ -59,12 +59,30 @@ class TestSignals(unittest.TestCase):
 
 class TestRisk(unittest.TestCase):
     def test_drawdown_brake_reduces_exposure(self):
-        rm = RiskManager(RiskConfig(dd_soft=0.015, dd_hard=0.045))
+        rm = RiskManager(RiskConfig(dd_soft=0.015, dd_hard=0.045, lockin_full_at=0.0))
         rm.update_equity(105_000, NOW - timedelta(hours=30))
         full, _ = rm.exposure_multiplier(105_000, NOW, 0.5)
         hurt, _ = rm.exposure_multiplier(100_000, NOW, 0.5)   # ~4.8% drawdown
         self.assertEqual(full, 1.0)
         self.assertLessEqual(hurt, 0.25 + 1e-9)
+
+    def test_endgame_lockin_scales_with_banked_return(self):
+        cfg = RiskConfig(lockin_start=NOW, lockin_full_at=0.01, lockin_min_mult=0.25)
+        rm = RiskManager(cfg, initial_equity=100_000)
+        rm.update_equity(101_000, NOW)
+        before, _ = rm.exposure_multiplier(101_000, NOW - timedelta(hours=1), 0.6)
+        self.assertEqual(before, 1.0)                                   # not active yet
+        for equity, expected in ((99_000, 1.0), (100_000, 1.0), (100_500, 0.625), (101_000, 0.25), (103_000, 0.25)):
+            mult, d = rm.exposure_multiplier(equity, NOW, 0.6)
+            self.assertAlmostEqual(mult, expected, places=9)
+            self.assertAlmostEqual(d["lockin_mult"], expected, places=3)
+
+    def test_endgame_lockin_combines_with_taper(self):
+        cfg = RiskConfig(lockin_start=NOW, lockin_full_at=0.01, lockin_min_mult=0.25, taper_start=NOW, taper_mult=0.5)
+        rm = RiskManager(cfg, initial_equity=100_000)
+        rm.update_equity(102_000, NOW)
+        mult, _ = rm.exposure_multiplier(102_000, NOW, 0.6)
+        self.assertAlmostEqual(mult, 0.125)
 
     def test_cppi_limits_gross_near_floor(self):
         rm = RiskManager(RiskConfig(cppi_floor=0.96))
@@ -256,6 +274,32 @@ class TestSchedulerRetry(unittest.TestCase):
         self.assertEqual(calls, [])
         bot.tick(datetime(2026, 10, 11, 0, 1, tzinfo=timezone.utc))
         self.assertEqual(len(calls), 1)
+
+
+class TestHourlyStep(unittest.TestCase):
+    def test_deadband_scales_with_exposure(self):
+        from bot import main as m
+        from bot.risk.risk_manager import RiskManager
+        from bot.storage.db import Database
+        import tempfile, pathlib
+
+        bot = m.Bot.__new__(m.Bot)
+        bot.s = Settings(mode="paper", api_key="k", api_secret="s")
+        bot.db = Database(pathlib.Path(tempfile.mkdtemp()) / "t.db")
+        coins = list(bot.s.strategy.whitelist)
+        rng = np.random.default_rng(0)
+        idx = pd.date_range(end=NOW, periods=600, freq="1h")
+        closes = pd.DataFrame(np.exp(np.cumsum(rng.normal(0, 0.01, (600, len(coins))), axis=0)) * 10, idx, coins)
+        bot.data = type("D", (), {"hourly_closes": lambda self, u: closes[u]})()
+        ticker = {c: {"last": 10.0, "bid": 10.0, "ask": 10.0, "volume_usd": 1e6 + i} for i, c in enumerate(coins)}
+        pf = Portfolio(usd_free=101_000, usd_total=101_000, values={})
+        seen = []
+        bot.executor = type("E", (), {"rebalance": lambda self, t, deadband=None, **k: seen.append(deadband) or 0})()
+        for equity, band in ((100_000, 0.02), (101_000, 0.005)):
+            bot.risk = RiskManager(RiskConfig(lockin_start=NOW), initial_equity=100_000)
+            pf.usd_free = pf.usd_total = equity
+            self.assertTrue(bot.hourly_step(NOW, pf, ticker))
+            self.assertAlmostEqual(seen[-1], band)
 
 
 if __name__ == "__main__":

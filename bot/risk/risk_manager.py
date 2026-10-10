@@ -3,7 +3,7 @@
 All controls are automatic: the competition forbids manual intervention, so
 every protective action must come from code.
 
-exposure multiplier = min(drawdown brake, CPPI cap ratio, 24h loss limit) x taper
+exposure multiplier = min(drawdown brake, CPPI cap ratio, 24h loss limit) x taper x endgame lock-in
 """
 from __future__ import annotations
 
@@ -92,12 +92,16 @@ class RiskManager:
         day_mult = c.day_loss_mult if day_ret <= -c.day_loss_limit else 1.0
 
         taper = c.taper_mult if now >= c.taper_start else 1.0
-        mult = max(0.0, min(dd_mult, cppi_mult, day_mult)) * taper
+        banked = equity / self.initial_equity - 1.0 if self.initial_equity else 0.0
+        lock = 1.0
+        if c.lockin_full_at > 0 and now >= c.lockin_start:
+            lock = 1.0 - (1.0 - c.lockin_min_mult) * min(1.0, max(0.0, banked / c.lockin_full_at))
+        mult = max(0.0, min(dd_mult, cppi_mult, day_mult)) * taper * lock
         return mult, {
             "drawdown": round(dd, 5), "dd_mult": round(dd_mult, 3),
             "cushion": round(cushion, 5), "cppi_mult": round(cppi_mult, 3),
             "ret_24h": round(day_ret, 5), "day_mult": day_mult, "taper": taper,
-            "risk_mult": round(mult, 3),
+            "banked": round(banked, 5), "lockin_mult": round(lock, 3), "risk_mult": round(mult, 3),
         }
 
     # -------------------------------------------------------- trailing stops

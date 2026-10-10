@@ -124,3 +124,22 @@ Ground rules
 - Oct 10 08:32 UTC leaderboard: Team150-negExp #8/190 overall, #3 India, +1.0% (equity $101,003.85,
   drawdown 0.11%, fees 0.098%). India #1 Team107 (IITM) +1.6%, #2 Team109 (IIT Mandi) +1.3%.
   Only 8 teams above +1%. Decision: Plan A unchanged (P(clear #20) 77.5% vs 73.4% A+ vs 66.4% B).
+
+## Evening session (Oct 10, 17:00-19:00 UTC): endgame lock-in
+- Funnel re-read: compliance -> top 20 per region by RETURN -> composite (0.4 Sortino + 0.3 Sharpe +
+  0.3 Calmar) -> code review -> top 5 per region = 15 finalists. Return is only the gate; the
+  composite among the top 20 decides.
+- Insight: ratio scores are scale-free only while nothing is banked. With gain B banked, future risk
+  k grows the denominators (sd, downside dev, MDD ~ k) faster than the numerators (B + k*mu), so the
+  window score rises as k falls. Tournament theory agrees: leaders cut risk, laggards add it.
+- Crypto EW market Oct 4-9: -7.1% (Oct 8 -6.2%), which explains the weak field (only 8/190 > +1%).
+- research/endgame.py: 5,350 historical 7.3-day stretches of the live ensemble, our realised path
+  (flat to Oct 9 22:00, +1% banked), four readings of the formula (daily/hourly/active-days/raw).
+  +1% banked: A (1x) median composite 10.6, P(R<0) 22%; L4 (1x -> 0.25x linearly as banked 0 -> +1%)
+  median composite 30.0, p25 14.0, P(R<0) 8%, median R +1.15% vs +1.20%. Every lower-risk policy
+  dominates A at every quantile; A+ (1.33x) is worse. The state-dependent L4 beats fixed 0.25x on
+  return and when banked is 0 or +0.5% (it keeps risk when nothing is banked).
+- Funnel model (3 hypothetical India fields, calibrated competitor vol/beta): P(top 20) A 79-89%,
+  L4 83-87%; P(top 20 and top-5 composite) A 33-41% -> L4 62-67%.
+- ADOPTED: RiskConfig.lockin_* (start Oct 10 12:00 UTC, full at +1%, min 0.25x) and the rebalance
+  deadband scaled by exposure (min 0.25) so the smaller book tracks. Tests 27/27.

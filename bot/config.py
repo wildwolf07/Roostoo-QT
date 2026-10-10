@@ -111,6 +111,14 @@ class RiskConfig:
     # End-of-competition taper (UTC)
     taper_start: datetime = datetime(2026, 10, 16, 12, 0, tzinfo=timezone.utc)
     taper_mult: float = 0.5
+    # Endgame lock-in (research/endgame.py). The finalists' score is a ratio (Sortino, Sharpe, Calmar)
+    # over the contest window: once a gain is banked, more risk adds more to the denominators than to
+    # the numerators. From lockin_start, exposure falls linearly from 1x (nothing banked or a loss)
+    # to lockin_min_mult once the contest return reaches lockin_full_at. It rises again if the gain
+    # shrinks, because a team below the top-20 return cut needs return more than a smooth curve.
+    lockin_start: datetime = datetime(2026, 10, 10, 12, 0, tzinfo=timezone.utc)
+    lockin_full_at: float = 0.01       # contest return at which the minimum multiplier is reached (0 = off)
+    lockin_min_mult: float = 0.25
 
 
 @dataclass(frozen=True)

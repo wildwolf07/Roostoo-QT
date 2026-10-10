@@ -79,7 +79,7 @@ part of the backtest's 1.27 is selection luck, and every result here is conserva
 | `bot/api/roostoo_client.py` | HMAC-SHA256 signing, rate limiter (≤20 calls/min vs 30 limit), retries with backoff, `Success`-flag handling, audit hook |
 | `bot/data/market_data.py` | Binance hourly klines (Roostoo has no OHLCV), ticker parsing, universe selection by 24h volume |
 | `bot/strategy/signals.py` | **Pure functions** shared by live bot and research backtester: features, sleeves, ensemble, tranching |
-| `bot/risk/risk_manager.py` | Drawdown brake and end-of-contest taper (CPPI cap, 24h loss limit and trailing stops available but disabled by research) |
+| `bot/risk/risk_manager.py` | Drawdown brake, endgame lock-in and end-of-contest taper (CPPI cap, 24h loss limit and trailing stops available but disabled by research) |
 | `bot/execution/executor.py` | Targets → orders, precision rounding, deadbands, maker-first with market fallback |
 | `bot/storage/db.py` | SQLite audit trail: every API call, order (with reason), decision, equity snapshot |
 | `bot/main.py` | Autonomous scheduler (`tick()`): minute snapshots, daily rebalance with bounded retries, persisted state |
@@ -162,7 +162,8 @@ Fees were the main reason our first design failed, so turnover is designed down 
 | Position cap | ≤30% of equity per coin; gross ≤95%; no leverage |
 | Drawdown brake | catastrophe-only: linear de-risking from 6% to 12% drawdown from peak (down to ×0.25). Tighter brakes whipsaw (RESEARCH.md) |
 | Trailing stop | available but **disabled**: lowered Sharpe in both periods (RESEARCH.md, tail study) |
-| Taper | final ~36h of the contest → exposure ×0.5 |
+| Endgame lock-in | from Oct 10: exposure ×1 → ×0.25 as the banked contest return goes 0 → +1% (back up if the gain shrinks). The finalists' score is a ratio over the window, so after a gain, extra risk grows the denominators faster than the numerators (`research/endgame.py`, DECISIONS.md #11) |
+| Taper | final ~36h of the contest → exposure ×0.5 (on top of the lock-in) |
 | Diversification | 4 sleeves × 4 coins per side over 25 coins; worst single-coin day in backtest −2.1% of equity |
 | Operational | price sanity check (±3% of ticker), order-size cap, state rebuilt from the exchange every loop, stale orders cancelled on restart, data-source fallback, bounded rebalance retries |
 

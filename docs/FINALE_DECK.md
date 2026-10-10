@@ -50,6 +50,15 @@ Ablation: removing any sleeve hurts one test period.
 - What stays: a catastrophe-only 6–12% drawdown brake (free insurance: same median score as none,
   smaller worst case), position caps, no leverage, and a taper over the last 1.5 days.
 
+### 8b. Playing the scoring rule: the endgame lock-in
+- The score is a *ratio* over a fixed window. Once a gain is banked, more risk grows the
+  denominators faster than the numerators, so the best policy cuts risk when ahead and keeps it
+  when behind (tournament theory: Brown–Harlow–Starks 1996, Browne 1999).
+- Rule committed in code on Oct 10: exposure 1× → 0.25× as banked return goes 0 → +1%.
+- Evidence (5,350 historical stretches, four readings of the formula): median composite
+  10.6 → 30.0, P(loss) 22% → 8%, for −0.05% of median return. P(top 5 by composite, modelled
+  field) 33–41% → 62–67%.
+
 ### 9. Live results vs expectation
 - Live equity curve plus daily returns (`scripts/daily_report.py`).
 - Live vs backtest: fills (maker share), fees, tracking error, exposure.

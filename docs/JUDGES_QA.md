@@ -84,10 +84,15 @@ evaluate any ML signal the same way.
   rebalance on a data blip. Each is in the commit history.
 
 ### 13. "How did you choose your risk level?"
-A Monte Carlo over 2,675 historical 7.5-day stretches. The composite score is invariant to
-exposure (the ratios are scale-free). Exposure only changes the chance of clearing the top-20
-return cutoff versus loss risk, so we set it from the observed leaderboard cutoff
-(`research/risk_table.py`).
+In two steps. **Before the contest:** a Monte Carlo over 2,675 historical 7.5-day stretches. With
+nothing banked, the composite is invariant to exposure (the ratios are scale-free), so exposure only
+trades the chance of clearing the top-20 return cut against loss risk (`research/risk_table.py`).
+**During the contest:** once a gain is banked, that invariance breaks. The gain sits in every
+numerator, and further risk grows the denominators (volatility, downside deviation, max drawdown)
+faster than the numerators. `research/endgame.py` shows that with +1% banked, a rule moving exposure
+from 1× to 0.25× scores higher at every quantile under all four readings of the formula we tested:
+median composite 10.6 → 30.0, P(loss) 22% → 8%. Median return falls only from +1.20% to +1.15%, so
+the top-20 return cut is unaffected. That is the endgame lock-in (DECISIONS.md #11).
 
 ### 14. "Is any of this manual?"
 No. A single autonomous process under systemd on EC2. Deploys only via committed code
@@ -98,3 +103,12 @@ never used outside the bot (even our health check uses the test key).
 **Measure before believing.** Statistically strong signals (reversal t ≈ −14, lead-lag t ≈ 16,
 short low-risk t ≈ −6) all **lost money** once costs and fat tails were included. Our edge came
 from rejecting most ideas with evidence, and the decision log shows each one.
+
+### 16. "Isn't cutting risk to protect your score just gaming the metric?"
+It is optimising the stated objective, which is what a trading desk does with its own risk budget.
+The rule is (a) **autonomous and committed in advance**: a formula of our own banked return, not a
+manual decision; (b) **symmetric**: exposure goes back up if the gain shrinks, because a team near
+the return cut needs return more than smoothness; (c) **the same strategy**: the same signals still
+trade every day, only smaller. It is the textbook result for evaluation tournaments: leaders cut
+risk and laggards add it (Brown, Harlow & Starks 1996; Chevalier & Ellison 1997; Browne 1999,
+"Reaching goals by a deadline"). We show the full trade-off table, including the return we give up.

@@ -126,7 +126,9 @@ class Bot:
         if force_daily:
             n = self.executor.rebalance(targets, deadband=0.0, reason="daily rebalance", min_order_usd=50.0)
         else:
-            n = self.executor.rebalance(targets, reason=f"scheduled rebalance [{regime.label}]")
+            # the deadband is sized for a full book; scale it with exposure so a de-risked book still tracks
+            band = self.s.execution.deadband_frac * min(1.0, max(risk_mult, 0.25))
+            n = self.executor.rebalance(targets, deadband=band, reason=f"scheduled rebalance [{regime.label}]")
         if n:
             self.last_fill_day = now.date().isoformat()
         return True
