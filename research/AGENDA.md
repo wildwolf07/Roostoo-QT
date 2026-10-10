@@ -119,3 +119,8 @@ Ground rules
 - Whitelist expansion (+14 Roostoo coins): better OOS, worse 2021-22 and full Sharpe -> not adopted.
 - Stopping point: further variants would raise the trial count (deflated-Sharpe penalty) without
   robust evidence; remaining value is in live monitoring and the leaderboard-driven risk decision.
+
+## Live status
+- Oct 10 08:32 UTC leaderboard: Team150-negExp #8/190 overall, #3 India, +1.0% (equity $101,003.85,
+  drawdown 0.11%, fees 0.098%). India #1 Team107 (IITM) +1.6%, #2 Team109 (IIT Mandi) +1.3%.
+  Only 8 teams above +1%. Decision: Plan A unchanged (P(clear #20) 77.5% vs 73.4% A+ vs 66.4% B).

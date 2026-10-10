@@ -15,6 +15,7 @@ committed code, deployed with `deploy/deploy.sh`.
 | 7 | Oct 10 | **Drawdown brake 2.5–7% → catastrophe-only 6–12%** | At the live 25-coin config the 2.5–7% brake cut the median 14-day composite in both periods (IS 2.32 → 1.40, OOS 5.00 → 4.21). The 6–12% brake equals 'no overlay' on the median and still trims the worst-case drawdown | `39a452d` |
 | 8 | Oct 10 | **Operational hardening**: Binance data fallback hosts, cancel stale orders on restart, a failed daily rebalance retried up to 5× | Found in a code review of live failure modes; unit-tested | `8b55426`, `b1673d0` |
 | 9 | Oct 10 | **Plan B made a config switch** (sleeve weights), default unchanged | Pre-validated so a high top-20 cutoff can be answered without new code mid-contest | `203166a` |
+| 10 | Oct 10 | **Leaderboard check → stay on Plan A (no change)** | Live leaderboard (Oct 10, 08:32 UTC): we are #8 of 190 overall and #3 in India at +1.0% (India #1 +1.6%, #2 +1.3%). `scripts/leaderboard_decision.py`: P(finishing above India #20) is 77.5% on Plan A vs 73.4% on A+ and 66.4% on B (if #20 ends at 0%). Extra risk only lowers our odds when ahead | — |
 
 ## Ideas tested and rejected (with numbers)
 
