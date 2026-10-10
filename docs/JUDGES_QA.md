@@ -12,8 +12,10 @@ corrects for best-of-N selection, skew and fat tails, gives a 64–71% probabili
 Sharpe beats the best lucky trial, and the probabilistic Sharpe ratio gives 99% that it is above
 zero. We also (a) split in-sample and out-of-sample for every decision, (b) chose plateau
 settings rather than peaks (the live config ranks 5/15 in its own grid), and (c) validated on
-**2021–22 data that was never used for design**: +19.8% while BTC fell −49%. We expect live
-Sharpe to be **lower** than the backtest's 1.27, and we say so in the README.
+**2021–22 data that was never used for design**: +19.8% while BTC fell −49%, and (d) checked
+survivorship with a 72-coin point-in-time universe including delisted coins (Sharpe 1.55 vs 1.08).
+A block bootstrap puts the Sharpe at 1.28 with a 95% CI of [0.19, 2.34] (P(Sharpe ≤ 0) = 1.1%). We
+expect live Sharpe to be **lower** than the backtest's 1.27, and we say so in the README.
 
 ### 2. "Why should 7–14 day momentum work in crypto?"
 It is a documented factor (Liu, Tsyvinski & Wu, *J. Finance* 2022), usually attributed to
