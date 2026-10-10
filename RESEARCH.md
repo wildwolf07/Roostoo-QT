@@ -415,3 +415,18 @@ does not depend on the field, because our own score distribution improves at eve
 **Adopted** (DECISIONS.md #11): `RiskConfig.lockin_*`, and the rebalance deadband now scales with
 exposure (floor 0.25) so the smaller book still tracks its targets. Unit-tested. Daily trading
 continues: signals and rebalancing are unchanged, only the position size is smaller.
+
+**Moonshot check** (`research/moonshot.py`): could we chase the overall #1 return (+37%, a team in
+another region) in the last 7 days? All-in, long-only bets at 95% of equity, from the same historical
+stretches (three hypothetical India fields):
+
+| Plan | P(reach +37%) | P(loss) | P(loss > 10%) | P(top 20) | P(top 5 composite) | P(#1 composite) |
+|---|---|---|---|---|---|---|
+| Lock-in (adopted) | 0% | 7% | 0% | 84–87% | 62–68% | 18–25% |
+| All-in: most volatile coin | 5.7% | 52% | 22% | 48–50% | 29–30% | 20–21% |
+| All-in: top-momentum coin | 2.8% | 49% | 13% | 50–54% | 26–29% | 14–15% |
+| All-in: top-3 momentum | 1.4% | 44% | 8.5% | 55–62% | 26–28% | 13–14% |
+
+Gambling halves the chance of being a finalist and does not raise the chance of finishing #1 in the
+region. Finalists and prizes are per region, so a team in another region at +37% is not our
+competition for a finalist place. **Not adopted.**

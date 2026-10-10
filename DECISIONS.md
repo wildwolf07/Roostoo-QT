@@ -37,6 +37,7 @@ committed code, deployed with `deploy/deploy.sh`.
 | Volatility-managed scaling (Moreira–Muir) | Classic Sharpe booster for momentum | Full Sharpe 1.08 → 0.73–1.00, worse 2022, higher max DD |
 | End-of-contest taper removal / 2% deadband changes | Small score gains | Mixed across periods, so unchanged |
 | Add 14 more Roostoo coins (ONDO, PENGU, SEI, …) | Breadth helped in the survivorship test | Better recent OOS, but worse 2021–22 and full Sharpe (0.92–1.00 vs 1.08) |
+| All-in concentrated bet to chase the overall #1 return (+37%, an AU-region team) | Only way to reach +37% in 7 days | `research/moonshot.py`: 95% in the most volatile coin reaches +37% in 5.7% of historical stretches, but P(loss) 52%, P(loss > 10%) 22%. P(top 20 in region) falls 84–87% → 48–50%, P(top 5 by composite) 62–68% → 29–30%, P(#1 by composite) is no better (20–21% vs 18–25% for the lock-in). It also breaks consistency with the declared strategy |
 | Higher vol target (1.6–2.0%) | Larger returns | Composite unchanged, fatter loss tail. Kept at 1.2% unless the leaderboard demands more |
 
 ## Process safeguards

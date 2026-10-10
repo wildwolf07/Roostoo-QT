@@ -143,3 +143,7 @@ Ground rules
   L4 83-87%; P(top 20 and top-5 composite) A 33-41% -> L4 62-67%.
 - ADOPTED: RiskConfig.lockin_* (start Oct 10 12:00 UTC, full at +1%, min 0.25x) and the rebalance
   deadband scaled by exposure (min 0.25) so the smaller book tracks. Tests 27/27.
+- Moonshot (research/moonshot.py): all-in bets reach the overall #1 return (+37%) in <=5.7% of
+  stretches but halve P(finalist) (62-68% -> 26-30%) and do not raise P(#1 composite in India).
+  Rejected. Note: a restart does not rebalance (last_rebalance_hour persists), so the lock-in
+  deployed at 17:48 UTC takes effect at the Oct 11 00:01 UTC rebalance.
