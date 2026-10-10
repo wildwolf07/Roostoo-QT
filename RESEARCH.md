@@ -342,3 +342,15 @@ The strategy does **at least as well** without survivorship (better overall, wor
 the 2023–25 composite). Non-whitelist coins made up 27% of holdings. Our results are therefore
 not an artefact of picking today's winners. Limitation: pre-crash LUNA history is unavailable
 under its old ticker, and returns after a delisting are treated as flat.
+
+**Confidence intervals** (`research/bootstrap_ci.py`, stationary block bootstrap with a mean block of
+10 days, 3,000 resamples of 1,345 daily returns):
+
+| Metric | Median | 95% CI |
+|---|---|---|
+| Sharpe | 1.28 | [0.19, 2.34] |
+| Annual return | 17.6% | [2.6%, 32.5%] |
+| Max drawdown | 14.9% | [8.7%, 28.4%] |
+
+P(Sharpe ≤ 0) = 1.1%, consistent with the PSR of 99%. The edge is very likely positive, but
+its size is uncertain by an order of magnitude.
