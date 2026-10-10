@@ -106,3 +106,16 @@ Ground rules
 - single-name/short-squeeze risk: worst coin-day -2.1% of equity (short XLM 2023-07-13).
 - recent regime (live config backtest): 14d -1.71% (DD 3.2%), 30d +1.08%, 60d +8.18% (SR 3.2),
   180d +13.47% (SR 1.9). Ordinary drawdown, not a regime break; set expectations accordingly.
+
+## Morning session (Oct 10, 09:00-10:00 IST)
+- Scheduler hardening (b1673d0): failed daily rebalance retried each minute up to 5x; tick() + tests.
+- Leaderboard decision table + Plan B config switch (sleeve_weights) + scripts/leaderboard_decision.py.
+- docs/JUDGES_QA.md, docs/RUNBOOK.md, README restructured to the organisers' checklist.
+- Fee sensitivity: edge survives 2x taker fee (Sharpe 0.75 at 0.2%); break-even ~0.35%.
+- Alpha decay: OOS per-day alpha front-loaded (7-9 bps/day for 3 days), supports ~3-day hold.
+- Capacity: negligible impact at $100k; ~$5-10M limit without liquidity-weighted sizing.
+- Survivorship: 72-coin point-in-time universe incl. delisted coins -> Sharpe 1.55 vs 1.08. No inflation.
+- Bootstrap CI: Sharpe 1.28 [0.19, 2.34]; P(SR<=0) 1.1%.
+- Whitelist expansion (+14 Roostoo coins): better OOS, worse 2021-22 and full Sharpe -> not adopted.
+- Stopping point: further variants would raise the trial count (deflated-Sharpe penalty) without
+  robust evidence; remaining value is in live monitoring and the leaderboard-driven risk decision.
