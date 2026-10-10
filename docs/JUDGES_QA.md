@@ -61,13 +61,11 @@ deadband skips small trades (average tracking error ~13% of equity at 2%; effect
 
 ### 9. "Why a 25-coin universe?"
 Grinold's fundamental law: IR ∝ IC·√breadth. Sharpe rises monotonically with universe size
-(15: 0.89, 20: 1.14, 25: 1.27, 29: 1.44) and is flat across 3/4/5 coins per side. We stopped at
-25 because of **survivorship bias**: our list is today's coins, and that bias is strongest for the
-smallest ones. PEPE and SHIB are excluded for 18–25 bp tick-size spreads.
+(15: 0.89, 20: 1.14, 25: 1.27, 29: 1.44) and is flat across 3/4/5 coins per side. We stopped at 25 out of caution about survivorship. We then **tested** survivorship directly: on a point-in-time universe of 72 coins, including later-delisted ones (EOS, FTM, MKR, WAVES, FTT), the same strategy did *better* (Sharpe 1.55 vs 1.08, 2021–26), so our results are not an artefact of today's winners. PEPE and SHIB are excluded for 18–25 bp tick-size spreads.
 
 ### 10. "What would you do with more time or capital?"
 (a) Real execution research with order-book data (maker queue position, adverse selection);
-(b) a survivorship-free universe (include delisted coins); (c) regime-conditional sleeve
+(b) trade a broader universe (the point-in-time test suggests more breadth helps); (c) regime-conditional sleeve
 weights estimated out of sample; (d) capacity: at $100k our median order is 0.0015% of a coin's daily volume. At $10M the 95th percentile reaches ~2% of daily volume in the smallest coins, so beyond a few million we would add volume-weighted position limits and impact modelling (the mock exchange has no impact).
 
 ### 11. "Why didn't you use ML / LLMs?"

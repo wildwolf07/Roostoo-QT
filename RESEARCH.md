@@ -326,3 +326,19 @@ coin-rebalance.
 Market impact is negligible at contest size and small up to a few million dollars. From about
 $5–10M the smallest coins (ZEC, XLM, PENDLE, ICP, CRV: $5–12M daily volume) would need
 volume-weighted position limits.
+
+**Survivorship-bias test** (`research/survivorship.py`). Our whitelist is the coins live on
+Roostoo today, which could flatter a backtest. We rebuilt the universe **point-in-time** by
+adding 43 coins that were large at some point since 2021, including later-delisted or renamed
+coins (EOS, FTM, MKR, WAVES, MATIC, RNDR, and FTT through the FTX collapse). In both runs the
+strategy picks the 25 most liquid coins by trailing volume at each rebalance:
+
+| Universe, 2021–2026, fees incl. | Sharpe | Return | Max DD | 2021 / 2022 / 2023 / 2024 / 2025 / 2026 | 14d composite 2021–22 / IS / OOS |
+|---|---|---|---|---|---|
+| Survivors (29 coins) | 1.08 | +129% | 28.3% | 2.81 / −1.42 / 1.47 / 1.26 / 1.39 / 0.94 | 2.73 / 2.84 / 4.00 |
+| **Broad point-in-time (72 coins)** | **1.55** | **+240%** | **22.1%** | 4.23 / −0.25 / 2.17 / 0.90 / 1.46 / 0.71 | 6.72 / 1.37 / 4.26 |
+
+The strategy does **at least as well** without survivorship (better overall, worse only in
+the 2023–25 composite). Non-whitelist coins made up 27% of holdings. Our results are therefore
+not an artefact of picking today's winners. Limitation: pre-crash LUNA history is unavailable
+under its old ticker, and returns after a delisting are treated as flat.

@@ -30,6 +30,7 @@
 | 2023-01 → 2026-10 (design + out-of-sample) | **+84%, Sharpe 1.27, max DD 16.9%** | buy-and-hold with ~50% drawdowns |
 | 2021-02 → 2022-12 (never used for design) | **+19.8%, Sharpe 0.70** | **−49.2%** |
 | 14-day windows, out-of-sample | median composite 4.0; 67% of windows positive | |
+| Survivorship test (72-coin point-in-time universe incl. delisted coins) | Sharpe 1.55 vs 1.08 on survivors: no survivorship inflation | |
 | Statistical confidence | P(true Sharpe > 0) = 99.2% (PSR); 64–71% after deflating for every variant we tried (DSR) | |
 
 We expect live performance to come in **below** the backtest. The deflated Sharpe says
