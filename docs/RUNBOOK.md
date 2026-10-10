@@ -37,7 +37,8 @@ For example `sudo bash /opt/roostoo-bot/deploy/deploy.sh 727857e`. Commit ids ar
 or in DECISIONS.md. Run `sudo bash /opt/roostoo-bot/deploy/deploy.sh main` to return to the latest.
 
 ### Change the risk level (Plan A / Plan B)
-Decided from the leaderboard with `research/risk_table.py` and `research/plan_b.py`. The change
+Decided from the leaderboard with `python -m scripts.leaderboard_decision --ours X --rank20 Y --days-left D`
+(see also `research/risk_table.py`, `research/plan_b.py`). The change
 is made **in code and committed** (that keeps the commit history traceable), then deployed
 with the command above.
 
