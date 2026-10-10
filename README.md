@@ -183,6 +183,7 @@ Service restarts happen only to load newly committed code.
 | [DECISIONS.md](DECISIONS.md) | Every live change and every rejected idea, with numbers and commits |
 | [docs/FINALE_DECK.md](docs/FINALE_DECK.md) | Presentation storyline |
 | [docs/JUDGES_QA.md](docs/JUDGES_QA.md) | Hard questions and evidence-backed answers |
+| [docs/RUNBOOK.md](docs/RUNBOOK.md) | Operations: daily check, deploy, rollback, risk switch |
 | [research/AGENDA.md](research/AGENDA.md) | Research log in chronological order |
 
 ## 8. Compliance
