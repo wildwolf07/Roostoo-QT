@@ -230,3 +230,18 @@ scaled daily by target ÷ realised strategy volatility (`research/vol_managed.py
 
 Rejected: the sleeves are already volatility-targeted ex ante, and re-scaling on realised
 volatility mostly adds noise (worse Sharpe and worse 2022).
+
+**Leaderboard decision table** (`research/risk_table.py`; 2,675 historical 7.5-day stretches of the
+live ensemble, fees included). Probability that our final return clears a given top-20 cutoff:
+
+| Exposure | ≥ 0% | ≥ 1% | ≥ 2% | ≥ 3% | ≥ 5% | P(loss > 3%) | Median composite |
+|---|---|---|---|---|---|---|---|
+| 0.75× | 55% | 27% | 12% | 5% | 1% | 1.1% | 2.12 |
+| 1.0× (live) | 55% | 32% | 18% | 9% | 3% | 3.1% | 2.11 |
+| 1.33× | 55% | 36% | 23% | 15% | 5% | 6.7% | 2.11 |
+| 1.6× | 55% | 37% | 24% | 15% | 5% | 8.1% | 2.11 |
+
+The ratios do not depend on exposure, so the median composite is flat. Exposure only trades
+the chance of clearing a positive cutoff against loss risk, and above 1.33× the 95% gross cap
+binds. Rule: cutoff ≤ 0% → 1.0×; cutoff around 1–3% → 1.33× (`target_daily_vol = 0.016`);
+cutoff ≥ 5% → out of reach for this strategy at any responsible exposure.
