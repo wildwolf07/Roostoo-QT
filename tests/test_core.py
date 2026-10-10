@@ -187,6 +187,15 @@ class TestEnsemble(unittest.TestCase):
         self.assertLess(diag["sleeves"]["mom_ls"].get("TRX", 0), 0)
         self.assertTrue(all(v > 0 for v in diag["sleeves"]["lowrisk_lo"].values()))
 
+    def test_sleeve_weights_plan_b_is_long_only(self):
+        from dataclasses import replace
+        from bot.strategy.signals import ensemble_weights
+        cfg = replace(StrategyConfig(), sleeve_weights=(0.0, 0.5, 0.0, 0.5))
+        w, diag = ensemble_weights(self.closes, cfg)
+        self.assertTrue(w and all(v > 0 for v in w.values()))
+        equal, _ = ensemble_weights(self.closes, StrategyConfig())
+        self.assertNotEqual(set(w), set(equal) | {"__never__"})
+
     def test_blocked_coins_are_excluded(self):
         from bot.strategy.signals import ensemble_weights
         w, _ = ensemble_weights(self.closes, StrategyConfig(), blocked=frozenset({"ETH"}))

@@ -245,3 +245,16 @@ The ratios do not depend on exposure, so the median composite is flat. Exposure 
 the chance of clearing a positive cutoff against loss risk, and above 1.33× the 95% gross cap
 binds. Rule: cutoff ≤ 0% → 1.0×; cutoff around 1–3% → 1.33× (`target_daily_vol = 0.016`);
 cutoff ≥ 5% → out of reach for this strategy at any responsible exposure.
+
+**Plan B for a high top-20 cutoff** (`research/plan_b.py`, 7.5-day stretches 2023–26):
+
+| Mix @ exposure | P(≥3%) | P(≥5%) | P(≥8%) | P(loss > 5%) | Median composite |
+|---|---|---|---|---|---|
+| Live ensemble @ 1.0× | 9% | 3% | 0% | 0.6% | 2.11 |
+| Live ensemble @ 1.33× | 15% | 5% | 1% | 1.1% | 2.11 |
+| Long-only momentum + low-risk @ 1.33× | 26% | 15% | 7% | 9.8% | 1.90 |
+| Long-only momentum @ 1.33× | 27% | 16% | 7% | 9.2% | 1.18 |
+
+Plan B is `sleeve_weights = (0, 0.5, 0, 0.5)` and `target_daily_vol = 0.016`. It roughly triples
+P(return ≥ 5%) for a modest composite cost, but it is net long the market. Use it only if
+the leaderboard requires it.

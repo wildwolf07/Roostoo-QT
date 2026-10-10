@@ -54,6 +54,9 @@ class StrategyConfig:
     # "ensemble": 4 equal sleeves (momentum L/S, momentum long, filtered momentum L/S, low-risk long)
     style: str = "ensemble"
     ensemble_n: int = 4                # coins per side in each ensemble sleeve
+    # sleeve weights (mom_ls, mom_lo, mom_filtered_ls, lowrisk_lo). Plan B for a high top-20 cutoff
+    # (research/plan_b.py): (0, 0.5, 0, 0.5) with target_daily_vol 0.016
+    sleeve_weights: tuple = (0.25, 0.25, 0.25, 0.25)
     lottery_max_rank: float = 0.7      # filtered sleeve: longs must rank <= 70th pct on 24h MAX return
     short_vol_rank: float = 0.6        # filtered sleeve: shorts must rank <= 60th pct on volatility
     # Tranching: average the targets computed at t, t-spacing, t-2*spacing, ... so the book

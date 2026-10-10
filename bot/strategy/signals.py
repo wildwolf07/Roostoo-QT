@@ -254,10 +254,10 @@ def ensemble_weights(closes: pd.DataFrame, cfg: StrategyConfig, blocked: frozens
         "lowrisk_lo": sleeve_weights(r1, feats, lowrisk, cfg, long_only=True),
     }
     acc: dict = {}
-    for w in sleeves.values():
+    for sw, w in zip(cfg.sleeve_weights, sleeves.values()):
         for c, x in w.items():
-            acc[c] = acc.get(c, 0.0) + x / len(sleeves)
-    diag = {"style": "ensemble", "universe": uni,
+            acc[c] = acc.get(c, 0.0) + sw * x
+    diag = {"style": "ensemble", "universe": uni, "sleeve_weights": list(cfg.sleeve_weights),
             "sleeves": {k: {c: round(x, 4) for c, x in v.items()} for k, v in sleeves.items()},
             "mom_z": {c: round(float(x), 2) for c, x in mom.sort_values(ascending=False).items()},
             "lowrisk_z": {c: round(float(x), 2) for c, x in lowrisk.sort_values(ascending=False).items()}}
