@@ -108,8 +108,8 @@ from rejecting most ideas with evidence, and the decision log shows each one.
 ### 16. "Isn't cutting risk to protect your score just gaming the metric?"
 It is optimising the stated objective, which is what a trading desk does with its own risk budget.
 The rule is (a) **autonomous and committed in advance**: a formula of our own banked return, not a
-manual decision; (b) **symmetric**: exposure goes back up if the gain shrinks, because a team near
-the return cut needs return more than smoothness; (c) **the same strategy**: the same signals still
+manual decision; (b) **state-dependent**: exposure returns to full size only if the gain is gone, because then
+there is nothing to protect and a negative score cannot qualify; (c) **the same strategy**: the same signals still
 trade every day, only smaller. It is the textbook result for evaluation tournaments: leaders cut
 risk and laggards add it (Brown, Harlow & Starks 1996; Chevalier & Ellison 1997; Browne 1999,
 "Reaching goals by a deadline"). We show the full trade-off table, including the return we give up.

@@ -306,7 +306,7 @@ class TestHourlyStep(unittest.TestCase):
         pf = Portfolio(usd_free=101_000, usd_total=101_000, values={})
         seen = []
         bot.executor = type("E", (), {"rebalance": lambda self, t, deadband=None, **k: seen.append(deadband) or 0})()
-        for equity, band in ((100_000, 0.02), (101_000, 0.003)):
+        for equity, band in ((100_000, 0.02), (101_000, 0.002)):
             bot.risk = RiskManager(RiskConfig(lockin_start=NOW), initial_equity=100_000)
             pf.usd_free = pf.usd_total = equity
             self.assertTrue(bot.hourly_step(NOW, pf, ticker))

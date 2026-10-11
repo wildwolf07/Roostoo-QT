@@ -50,12 +50,16 @@ POLICIES = {
     "F35 0.35x": k_fixed(0.35),
     "F25 0.25x": k_fixed(0.25),
     "F15 0.15x": k_fixed(0.15),
+    "F10 0.10x": k_fixed(0.10),
+    "F05 0.05x": k_fixed(0.05),
     "L1  lock-in 1x->0.35x by +1%": k_lockin(0.01, 0.35),
     "L2  lock-in 1x->0.35x by +2%": k_lockin(0.02, 0.35),
     "L3  lock-in 1x->0.25x by +1.5%": k_lockin(0.015, 0.25),
     "L4  lock-in 1x->0.25x by +1%": k_lockin(0.01, 0.25),
     "L5  lock-in 1x->0.15x by +1%": k_lockin(0.01, 0.15),
     "L6  lock-in 1x->0.10x by +1%": k_lockin(0.01, 0.10),
+    "L7  lock-in 1x->0.15x by +0.25%": k_lockin(0.0025, 0.15),
+    "L8  lock-in 1x->0.10x by +0.25%": k_lockin(0.0025, 0.10),
 }
 
 
@@ -132,6 +136,7 @@ def main() -> None:
     ap.add_argument("--mdd-so-far", type=float, default=0.0011)
     ap.add_argument("--field", type=float, nargs="*", default=None, help="current returns of other teams in region")
     ap.add_argument("--step", type=int, default=6, help="hours between historical start points")
+    ap.add_argument("--k-now", type=float, default=1.0, help="exposure multiplier live until the next rebalance")
     args = ap.parse_args()
 
     now = pd.Timestamp(args.now, tz="UTC").floor("1h")
@@ -158,7 +163,7 @@ def main() -> None:
         finals, comps, top20, top5, top1 = [], {v: [] for v in ("daily", "hourly", "daily-active", "raw")}, [], [], []
         for s in starts:
             eq = list(past)
-            e, k = eq[-1], 1.0
+            e, k = eq[-1], args.k_now
             for t in range(H):
                 h = now_h + t
                 if t == to_rebal or (t > to_rebal and (t - to_rebal) % 24 == 0):

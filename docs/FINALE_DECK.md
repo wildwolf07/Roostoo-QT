@@ -54,7 +54,7 @@ Ablation: removing any sleeve hurts one test period.
 - The score is a *ratio* over a fixed window. Once a gain is banked, more risk grows the
   denominators faster than the numerators, so the best policy cuts risk when ahead and keeps it
   when behind (tournament theory: Brown–Harlow–Starks 1996, Browne 1999).
-- Rule committed in code on Oct 10 (floor 0.15× from Oct 11): exposure 1× → 0.15× as banked return goes 0 → +1%.
+- Rule committed in code on Oct 10, refined on Oct 11 with the real leaderboard: exposure 1× → 0.10× as banked return goes 0 → +0.25%.
 - Evidence (5,350 historical stretches, four readings of the formula): median composite
   10.6 → 30.0, P(loss) 22% → 8%, for −0.05% of median return. On the real India leaderboard:
   P(top 5 by composite) 62% → 93–94%, P(#1) 9% → 27–32%.

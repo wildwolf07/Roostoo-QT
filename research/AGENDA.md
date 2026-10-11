@@ -170,3 +170,6 @@ Ground rules
 - Leaderboard refresh (Oct 11 ~05:55 UTC; it updates in snapshots): India 107 +1.6, 109 +1.1,
   145 +0.9, us +0.7 (#4), 179 0.0, 139 -0.5, 156 -0.6, 180 -0.8, 182 -0.8, ... Re-run on this
   field: live rule P(top 20) 100%, P(top5 comp) 74%, P(#1) 19% (1x: 54% / 10%). No change.
+- Re-run with --k-now 0.34 (live multiplier until the next rebalance; earlier runs assumed 1x):
+  old rule (re-risks as the gain shrinks) P(R<0) 13%, P(top5) 79%; fixed 0.10x 1% / 93%; new rule
+  1x -> 0.10x by +0.25% 1% / 94% / P(#1) 28%. At +0.3% banked: 60% -> 77%. ADOPTED (DECISIONS #13).

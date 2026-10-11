@@ -446,3 +446,19 @@ on the composite.
 
 Ranges cover a 0.11% vs 0.4% max drawdown so far. A deeper floor still helps a little, but below
 0.15× the book becomes too small to trade meaningfully every day, so 0.15× is the floor.
+
+**Update after the first lock-in rebalance (Oct 11, 06:00 UTC).** An overnight dip took us from
++1.1% to +0.65% before the 00:01 UTC rebalance. The rule then set ×0.34, and would have set ×0.45 the
+next day. Re-running from the real current state shows the re-risking branch no longer helps: India's
+top-20 return cut is far below zero, so extra return buys nothing and loss risk costs a lot. (The
+simulator now starts from the live multiplier until the next rebalance, `--k-now`.)
+
+| Policy, from +0.65% banked | Median return | P(return < 0) | P(top 5 by composite) | P(#1 by composite) |
+|---|---|---|---|---|
+| 1× | +0.76% | 29% | 54% | 11% |
+| Old rule: 1× → 0.15× by +1% | +0.92% | 13% | 79% | 21% |
+| Fixed 0.10× | +0.66% | 1% | 93% | 29% |
+| **New rule: 1× → 0.10× by +0.25% (adopted)** | **+0.67%** | **1%** | **94%** | **28%** |
+
+If the gain slips to +0.3% before the next rebalance, the new rule still beats the old one (77% vs
+60%). It returns to full size only when the gain is gone, because then there is nothing to protect.
