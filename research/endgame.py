@@ -25,10 +25,10 @@ import pandas as pd
 from research.ablation import build
 from research.robustness import _STATE, _init
 
-START = pd.Timestamp("2026-10-04", tz="UTC")
+START = pd.Timestamp("2026-10-04 12:00", tz="UTC")    # official window: Oct 4 17:30 -> Oct 18 17:30 IST
 LIVE = pd.Timestamp("2026-10-09 22:00", tz="UTC")     # our first hour in the market
-HOURS = 14 * 24                                        # contest window Oct 4 00:00 -> Oct 18 00:00
-TAPER_H = 13 * 24                                      # live taper (0.5x) acts from the Oct 17 rebalance
+HOURS = 14 * 24                                        # contest window Oct 4 12:00 -> Oct 18 12:00 UTC
+TAPER_H = 300                                          # live taper (0.5x) acts from the Oct 17 00:01 UTC rebalance
 FEE = 0.001
 SLEEVES = ("mom_ls", "mom_lo", "mom_f", "lowrisk_lo")
 

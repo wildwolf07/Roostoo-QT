@@ -107,6 +107,7 @@ P(finalist) (`research/moonshot.py`).
 | Daily activity at ×0.10 | Order planner dry-run on 365 days: ~3 orders a day, with fewer than 3 on 38% of days | $50 trade threshold for small books: ~13 a day, never fewer than 3, ~$1.40/day fees (DECISIONS #14) |
 | 8 active days in HKT or IST | Our first trade (Oct 9 21:51 UTC) falls on Oct 10 in HKT and IST, so there is zero slack | safety net at 12:00 UTC: same calendar day in UTC, HKT and IST (DECISIONS #12) |
 | Market-data outage | If every Binance host failed all day, the bot would skip the day | cache of the last good bars; trade on slightly stale bars (DECISIONS #14) |
+| Contest window | The app's hackathon page gives Oct 4 17:30 – Oct 18 17:30 IST (12:00–12:00 UTC); the bot was set to stop 12 h early | `live_end` = Oct 18 12:00 UTC; safety net at 10:00 UTC, before the 12:00 UTC day boundary (DECISIONS #16) |
 | Restart behaviour | A deploy does not trigger a rebalance; the change applies at the next 00:01 UTC | documented in RUNBOOK |
 | Exchange limits | MiniOrder $1, short collateral ≥ $1; our minimum is $50 | none |
 

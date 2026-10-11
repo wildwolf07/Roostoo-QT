@@ -1,7 +1,7 @@
 """Read-only performance report from the bot's own SQLite log (no API calls).
 
 Shows equity, exposure, our estimate of the competition composite score (the judges'
-window starts Oct 4; days before the bot went live count as flat), recent orders with
+window starts Oct 4 12:00 UTC; days before the bot went live count as flat), recent orders with
 their final fill status, fee totals and API health.
 
 Usage: python -m scripts.daily_report [--mode live]
@@ -16,7 +16,7 @@ import pandas as pd
 from bot.config import RuntimeConfig
 from bot.metrics import summary
 
-CONTEST_START = pd.Timestamp("2026-10-04", tz="UTC")
+CONTEST_START = pd.Timestamp("2026-10-04 12:00", tz="UTC")   # Oct 4 17:30 IST
 # backtest reference (RESEARCH.md v2, 14-day windows, out-of-sample): median / 95th pct
 BACKTEST_REF = {"median 14d return": "+0.3% to +0.6%", "median 14d max DD": "2.5-2.8%", "p95 14d max DD": "~5%"}
 

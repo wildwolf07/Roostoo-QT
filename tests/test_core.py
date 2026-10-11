@@ -279,7 +279,7 @@ class TestSchedulerRetry(unittest.TestCase):
         self.assertEqual(calls, [])
         bot.tick(datetime(2026, 10, 11, FORCE_HOUR_UTC, 1, tzinfo=timezone.utc))
         self.assertEqual(len(calls), 1)
-        self.assertLessEqual(FORCE_HOUR_UTC, 15)                          # before the HKT day ends (16:00 UTC)
+        self.assertLess(FORCE_HOUR_UTC, 12)        # before the contest-day (12:00 UTC) and HKT-day (16:00 UTC) boundaries
 
     def test_only_scheduled_hour_rebalances(self):
         bot, calls = self.make_bot([True] * 5)

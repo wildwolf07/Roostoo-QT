@@ -150,8 +150,9 @@ class RuntimeConfig:
     db_path: Path = ROOT / "data" / "bot.db"
     log_dir: Path = ROOT / "logs"
     # Competition key refuses to run before this time (UTC).
-    live_start: datetime = datetime(2026, 10, 4, 0, 0, tzinfo=timezone.utc)
-    live_end: datetime = datetime(2026, 10, 17, 23, 59, tzinfo=timezone.utc)
+    # official window (hackathon page in the Roostoo app): Oct 4 17:30 -> Oct 18 17:30 IST = 12:00 UTC to 12:00 UTC
+    live_start: datetime = datetime(2026, 10, 4, 12, 0, tzinfo=timezone.utc)
+    live_end: datetime = datetime(2026, 10, 18, 12, 0, tzinfo=timezone.utc)
 
 
 @dataclass(frozen=True)

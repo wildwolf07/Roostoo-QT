@@ -71,7 +71,7 @@ part of the backtest's 1.27 is selection luck, and every result here is conserva
                   └─► 4 sleeves → equal-weight ensemble → average of 3 daily tranches
                       └─► Executor: reduce first (SELL / SHORT_CLOSE), then add (BUY / SHORT_OPEN)
                           maker-first LIMIT at the touch → 3 min → re-plan → MARKET fallback
-                          (retried up to 5× on failure; 12:00 UTC safety net guarantees a trade on every calendar day in UTC, HKT and IST)
+                          (retried up to 5× on failure; 10:00 UTC safety net guarantees a trade on every day in UTC, HKT, IST and contest-day terms)
 ```
 
 | Module | Responsibility |
@@ -214,5 +214,5 @@ Service restarts happen only to load newly committed code.
 - Every order is logged with the signal reason that produced it (`orders.reason`), and every API request with its success or failure status (`api_calls`).
 - No high-frequency trading, market making or arbitrage: one strategy rebalance per day. Limit orders are used only to pay the lower maker fee on our own directional trades.
 - Spot only, 1× long and 1× short, no leverage (gross exposure ≤ 95% of equity).
-- At least 8 active trading days: the bot trades every day (about 13 orders a day even with the small locked-in book), with a 12:00 UTC safety net that lands on the same calendar day in UTC, HKT and IST, and cached market data if every data host is down.
+- At least 8 active trading days: the bot trades every day (about 13 orders a day even with the small locked-in book), with a 10:00 UTC safety net that lands on the same day in UTC, HKT and IST terms and before the contest's 12:00 UTC day boundary, and cached market data if every data host is down.
 - API keys live only in `.env` (gitignored); a pre-commit hook blocks secrets.

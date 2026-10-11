@@ -13,7 +13,7 @@ instance → Connect → Session Manager → Connect.** Paste one block at a tim
 cd /opt/roostoo-bot && sudo -u ec2-user .venv/bin/python -m scripts.daily_report
 ```
 Healthy: equity close to the previous day's, `gross` around 55–70% (4–6% while the lock-in is active), recent orders with
-status FILLED / OPEN / CLOSED, no loop errors. Today's rebalance runs at **00:01 UTC (05:31 IST)**; if it placed no orders, a safety-net rebalance runs at **12:00 UTC (17:30 IST)**.
+status FILLED / OPEN / CLOSED, no loop errors. Today's rebalance runs at **00:01 UTC (05:31 IST)**; if it placed no orders, a safety-net rebalance runs at **10:00 UTC (15:30 IST)**. The contest ends **Oct 18, 17:30 IST** (12:00 UTC).
 
 ### Is the bot running?
 ```bash

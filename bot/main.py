@@ -2,9 +2,10 @@
 
 Every minute    : ticker + balance + short positions -> equity snapshot, drawdown brake
 Daily 00:01 UTC : hourly bars -> 4-sleeve ensemble targets -> rebalance (retried up to 5x)
-Daily 12:00 UTC : safety net - if nothing traded today, rebalance with no deadband
-                  (12:00 UTC is 20:00 HKT and 17:30 IST, so the trade lands on the same calendar day
-                  whichever time zone the organisers use to count the 8 active trading days)
+Daily 10:00 UTC : safety net - if nothing traded today, rebalance with no deadband
+                  (10:00 UTC is 18:00 HKT and 15:30 IST, and before the contest's own 12:00 UTC day
+                  boundary, so the trade lands on the same day whichever convention the organisers use
+                  to count the 8 active trading days)
 
 Run:  python -m bot.main            (MODE from .env: paper | test | live)
 """
@@ -29,7 +30,7 @@ from bot.strategy.signals import apply_risk, compute_base_weights, hourly_vol, m
 log = logging.getLogger("bot")
 RUNNING = True
 MAX_REBALANCE_ATTEMPTS = 5   # a scheduled rebalance is retried each minute up to this many times
-FORCE_HOUR_UTC = 12          # daily safety net: trade by then if nothing has filled today (8-active-day rule)
+FORCE_HOUR_UTC = 10          # daily safety net: trade by then if nothing has filled today (8-active-day rule)
 
 
 def setup_logging(settings: Settings) -> None:

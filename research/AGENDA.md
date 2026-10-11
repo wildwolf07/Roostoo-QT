@@ -196,3 +196,12 @@ Ground rules
   #3: +1.0% thanks to one small cap (+66%); realised losses on 8 coins; DD est. >= 3%.
 - Model: --field-mdd / --field-beta, plus DD >= -return for teams below water. Live rule P(top5)
   85.5%, P(#1) 20%. Floor x0.075 (11 orders/day, never <3): P(top5) 86.1%, P(#1) 23.2%. ADOPTED.
+
+## Oct 11 (08:00-09:00 UTC): contest window
+- Hackathon page (Roostoo app): Oct 4 17:30 - Oct 18 17:30 IST = Oct 4 12:00 -> Oct 18 12:00 UTC.
+  The bot's live_end (Oct 17 23:59 UTC) was 12 h early and would have skipped the Oct 18 00:01 UTC
+  rebalance. Fixed: live_end = Oct 18 12:00 UTC; safety net 10:00 UTC (inside the same day in UTC,
+  HKT, IST and 12:00-UTC contest-day terms). Research windows shifted to the official start.
+- Re-run on the corrected window (days on 12:00 UTC boundaries; no negative contest day so far):
+  x0.075 P(top5) 88.9%, P(#1) 29.0%; x0.05 89.9% / 34.7%; 1x 48.6% / 8.1%. Keep x0.075 (activity).
+- Leaderboard 08:10 UTC: India 107 +1.5, 109 +1.1, 145 +0.9, us +0.7 (#4 India, #9 overall).
