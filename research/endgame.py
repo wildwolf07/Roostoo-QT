@@ -208,7 +208,7 @@ def main() -> None:
                 m = np.add.reduceat(mkt[s: s + H], np.arange(0, H, 24))
                 for _ in range(5):
                     R, C = competitor_paths(field, m, now_h / 24, now_h // 24 + 1, rng)
-                    above = R > eq[-1] - 1
+                    above = eq[-1] - 1 < R
                     in20 = above.sum() < 20
                     top20.append(in20)
                     better = (C[np.argsort(-R)[:19]] > sc["daily"]).sum() if in20 else 99

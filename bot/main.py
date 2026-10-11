@@ -16,10 +16,10 @@ import logging
 import signal
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import datetime
 from logging.handlers import TimedRotatingFileHandler
 
-from bot.api.roostoo_client import RoostooClient, ok
+from bot.api.roostoo_client import RoostooClient
 from bot.config import Settings, load_settings
 from bot.data.market_data import MarketData, select_universe
 from bot.execution.executor import Executor

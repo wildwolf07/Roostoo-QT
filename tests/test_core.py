@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 from bot.api.roostoo_client import sign
-from bot.config import ExecutionConfig, RiskConfig, Settings, StrategyConfig
+from bot.config import RiskConfig, Settings, StrategyConfig
 from bot.execution.executor import Executor, Portfolio, build_portfolio, floor_to
 from bot.risk.risk_manager import RiskManager
 from bot.strategy.signals import Regime, apply_risk, market_regime, momentum_scores, target_weights
@@ -313,7 +313,8 @@ class TestHourlyStep(unittest.TestCase):
         from bot import main as m
         from bot.risk.risk_manager import RiskManager
         from bot.storage.db import Database
-        import tempfile, pathlib
+        import tempfile
+        import pathlib
 
         bot = m.Bot.__new__(m.Bot)
         bot.s = Settings(mode="paper", api_key="k", api_secret="s")

@@ -10,7 +10,7 @@ Usage: python -m research.xs_backtest
 from __future__ import annotations
 
 from concurrent.futures import ProcessPoolExecutor
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, replace
 
 import numpy as np
 import pandas as pd
@@ -54,7 +54,6 @@ def build_weights(v: Variant, panel, feats) -> pd.DataFrame:
     logr = np.log(close).diff()
     vol24 = qv.rolling(24).sum()
     hours = close.index
-    w_cur = pd.Series(dtype=float)
     weights = {}
     start = 800
     for i in range(start + v.phase, len(hours) - 1, v.rebalance_h):
@@ -82,9 +81,11 @@ def build_weights(v: Variant, panel, feats) -> pd.DataFrame:
         win = logr.iloc[i - 168: i + 1][longs + shorts]
         sd = win.std().replace(0, np.nan)
         w = pd.Series(0.0, index=longs + shorts)
-        wl = (1 / sd[longs]); w[longs] = wl / wl.sum()
+        wl = 1 / sd[longs]
+        w[longs] = wl / wl.sum()
         if shorts:
-            ws = (1 / sd[shorts]); w[shorts] = -(ws / ws.sum())
+            ws = 1 / sd[shorts]
+            w[shorts] = -(ws / ws.sum())
             if v.beta_neutral:
                 beta = feats["beta_btc"].loc[t, longs + shorts].fillna(1.0).clip(0.2, 3)
                 bl, bs = (w[longs] * beta[longs]).sum(), (-w[shorts] * beta[shorts]).sum()

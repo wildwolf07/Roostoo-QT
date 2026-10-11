@@ -122,7 +122,7 @@ Ground rules
 
 ## Live status
 - Oct 10 08:32 UTC leaderboard: Team150-negExp #8/190 overall, #3 India, +1.0% (equity $101,003.85,
-  drawdown 0.11%, fees 0.098%). India #1 Team107 (IITM) +1.6%, #2 Team109 (IIT Mandi) +1.3%.
+  drawdown 0.11%, fees 0.098%). India #1 +1.6%, #2 +1.3%.
   Only 8 teams above +1%. Decision: Plan A unchanged (P(clear #20) 77.5% vs 73.4% A+ vs 66.4% B).
 
 ## Evening session (Oct 10, 17:00-19:00 UTC): endgame lock-in
@@ -153,7 +153,7 @@ Ground rules
   days with trades each day (if counted in HKT our live days are exactly Oct 10-17 = 8, zero slack);
   no HFT / market making / arbitrage; spot 1x long/short, no leverage; judges pick the top 3 at the
   finale with their own criteria.
-- India field (Oct 10 20:55 UTC): 107 +1.8, 109 +1.3, us +1.1, 145 +0.6, 180 +0.4, 139 0.0, then
+- India field (Oct 10 20:55 UTC): +1.8, +1.3, us +1.1, +0.6, +0.4, 0.0, then
   -0.4 ... India #20 at -5.2%. P(top 20) = 100% for every non-gambling plan.
 - endgame.py (+ P(#1 comp), floors 0.15/0.10): P(top5 comp) 1x 62%, floor .25 90%, .15 93-94%,
   .10 95-96%; P(#1) 9% / 21-23% / 27-32% / 31-40%. Adopted floor 0.15 (keeps a tradeable book).
@@ -167,8 +167,8 @@ Ground rules
 - Re-run from this state (banked +0.65%, MDD 0.46%, India field of Oct 10): live rule (floor 0.15)
   P(top5 comp) 73%, P(#1) 18%, median R +0.96%; fixed 0.15x 75% / 18% / +0.65%; 1x 54% / 9%.
   The live rule is as good as a fixed small book and keeps more upside -> no change.
-- Leaderboard refresh (Oct 11 ~05:55 UTC; it updates in snapshots): India 107 +1.6, 109 +1.1,
-  145 +0.9, us +0.7 (#4), 179 0.0, 139 -0.5, 156 -0.6, 180 -0.8, 182 -0.8, ... Re-run on this
+- Leaderboard refresh (Oct 11 ~05:55 UTC; it updates in snapshots): India +1.6, +1.1,
+  +0.9, us +0.7 (#4), 0.0, -0.5, -0.6, -0.8, -0.8, ... Re-run on this
   field: live rule P(top 20) 100%, P(top5 comp) 74%, P(#1) 19% (1x: 54% / 10%). No change.
 - Re-run with --k-now 0.34 (live multiplier until the next rebalance; earlier runs assumed 1x):
   old rule (re-risks as the gain shrinks) P(R<0) 13%, P(top5) 79%; fixed 0.10x 1% / 93%; new rule
@@ -202,12 +202,12 @@ Ground rules
   The bot's live_end (Oct 17 23:59 UTC) was 12 h early and would have skipped the Oct 18 00:01 UTC
   rebalance. Fixed: live_end = Oct 18 12:00 UTC; safety net 10:00 UTC (inside the same day in UTC,
   HKT, IST and 12:00-UTC contest-day terms). Research windows shifted to the official start.
-- Re-run on the corrected window (days on 12:00 UTC boundaries; no negative contest day so far):
+- Re-run on the corrected window (days on 12:00 UTC boundaries; path reconstructed from waypoints):
   x0.075 P(top5) 88.9%, P(#1) 29.0%; x0.05 89.9% / 34.7%; 1x 48.6% / 8.1%. Keep x0.075 (activity).
-- Leaderboard 08:10 UTC: India 107 +1.5, 109 +1.1, 145 +0.9, us +0.7 (#4 India, #9 overall).
-- Oct 11 17:10 UTC (crypto rally day): overall #14 (+0.9%), India #4 by return. India: 107 +2.5,
-  145 +2.0, 109 +1.8, us +0.9, 180 +0.8 (was -0.8 => DD >= 1.2%), 113 +0.6 (was -1.2), 139 +0.5,
-  179/116 0.0; India #20 now -3.4%. Model on this field (k-now 0.34 until Oct 12 00:01 UTC):
+- Leaderboard 08:10 UTC: India +1.5, +1.1, +0.9, us +0.7 (#4 India, #9 overall).
+- Oct 11 17:10 UTC (crypto rally day): overall #14 (+0.9%), India #4 by return. India: +2.5,
+  +2.0, +1.8, us +0.9, +0.8 (was -0.8 => DD >= 1.2%), +0.6 (was -1.2), +0.5,
+  0.0, 0.0; India #20 now -3.4%. Model on this field (k-now 0.34 until Oct 12 00:01 UTC):
   x0.075 P(top5) 95.2%, P(#1 comp) 50.9%, P(R<0) ~0%; 1x 44.3% / 8.1%. No change.
 
 ## Oct 12 (21:00-23:00 UTC Oct 11): organisers' final screening rules

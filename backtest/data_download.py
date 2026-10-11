@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import argparse
 import time
-from pathlib import Path
 
 import pandas as pd
 

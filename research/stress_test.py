@@ -5,7 +5,6 @@ Usage: python -m research.download_pre && python -m research.stress_test
 """
 from __future__ import annotations
 
-import numpy as np
 import pandas as pd
 
 from bot.config import ROOT, StrategyConfig

@@ -13,6 +13,41 @@ for design. Raw files: `daily_equity.csv`, `yearly.csv`, `windows_14d.csv`, `cra
 | 2025-06 → 2026-10 (out-of-sample) | +41.2%, Sharpe 1.85, max DD 14.7% | -21.0%, Sharpe -0.21, max DD 53.7% | -15.2%, Sharpe 0.16, max DD 64.8% |
 | Full 2021-02 → 2026-10 | +128.9%, Sharpe 1.08, max DD 28.3% | +129.2%, Sharpe 0.54, max DD 77.2% | +178.8%, Sharpe 0.63, max DD 82.6% |
 
+## Tear sheet: 2021-02 → 2026-10
+
+| | CAGR | Volatility | Sharpe | Sortino | Calmar | Max DD | Longest DD | Positive days | Worst day | Daily VaR 95% | Beta to BTC | Corr. to market |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| strategy | +15.6% | 14.5% | 1.07 | 1.60 | 0.55 | 28.3% | 815 d | 52% | -3.4% | 1.2% | 0.16 | 0.66 |
+| btc | +14.8% | 55.9% | 0.53 | 0.78 | 0.19 | 77.2% | 845 d | 50% | -15.4% | 4.4% | 1.00 | 0.83 |
+| equal_weight_market | +18.2% | 77.9% | 0.61 | 0.85 | 0.22 | 82.6% | 1117 d | 53% | -33.5% | 6.4% | 1.15 | 1.00 |
+
+## Tear sheet: out-of-sample 2025-06 → 2026-10
+
+| | CAGR | Volatility | Sharpe | Sortino | Calmar | Max DD | Longest DD | Positive days | Worst day | Daily VaR 95% | Beta to BTC | Corr. to market |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| strategy | +28.5% | 14.3% | 1.83 | 2.86 | 1.94 | 14.7% | 197 d | 51% | -3.2% | 1.0% | 0.22 | 0.71 |
+| btc | -16.7% | 41.5% | -0.23 | -0.33 | -0.31 | 53.7% | 368 d | 49% | -14.0% | 3.1% | 1.00 | 0.82 |
+| equal_weight_market | -12.3% | 67.1% | 0.14 | 0.20 | -0.19 | 64.8% | 368 d | 51% | -20.2% | 5.1% | 1.33 | 1.00 |
+
+## Why an ensemble: each sleeve alone vs combined (2021-02 → 2026-10)
+
+| Sleeve | CAGR | Sharpe | Max DD | 2022 return | Beta to BTC |
+|---|---|---|---|---|---|
+| mom_ls | +11.7% | 0.67 | 32.9% | -9.1% | -0.02 |
+| mom_lo | +22.2% | 0.96 | 38.1% | -31.0% | 0.31 |
+| mom_filtered | +6.5% | 0.49 | 23.5% | -2.9% | -0.01 |
+| lowrisk_lo | +12.9% | 0.59 | 47.1% | -37.3% | 0.37 |
+| ENSEMBLE | +15.6% | 1.07 | 28.3% | -19.6% | 0.16 |
+
+Daily-return correlations between sleeves:
+
+| | mom_ls | mom_lo | mom_filtered | lowrisk_lo |
+|---|---|---|---|---|
+| mom_ls | 1.00 | 0.24 | 0.72 | -0.13 |
+| mom_lo | 0.24 | 1.00 | 0.06 | 0.83 |
+| mom_filtered | 0.72 | 0.06 | 1.00 | -0.16 |
+| lowrisk_lo | -0.13 | 0.83 | -0.16 | 1.00 |
+
 ## Every 14-day window (the contest's length), weekly steps
 
 | Period | Windows | Median return | % positive | Median max DD | 95th pct max DD | Median composite |

@@ -11,7 +11,6 @@ Usage: python -m research.signal_lab
 from __future__ import annotations
 
 import os
-from pathlib import Path
 
 import numpy as np
 import pandas as pd

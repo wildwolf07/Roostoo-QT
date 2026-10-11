@@ -58,7 +58,6 @@ def run(close: pd.DataFrame, qv: pd.DataFrame, label: str, universe: int | None 
         t0 += pd.Timedelta(days=7)
     row.update({f"comp_{k}": round(float(np.median(v)), 2) for k, v in comps.items()})
     held = (W.iloc[800:].abs() > 1e-6)
-    extra_share = None
     return row, held
 
 

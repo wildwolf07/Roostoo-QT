@@ -38,9 +38,11 @@ def load_data(coins) -> tuple[pd.DataFrame, pd.DataFrame]:
     return closes_df, pd.DataFrame(vols).sort_index().reindex(closes_df.index)
 
 
-def run(start: str, end: str, scfg: StrategyConfig = StrategyConfig(), rcfg: RiskConfig = RiskConfig(),
+def run(start: str, end: str, scfg: StrategyConfig | None = None, rcfg: RiskConfig | None = None,
         fee: float = 0.001, slippage: float = 0.0002, short_fee: float = 0.001, deadband: float = 0.02, min_order: float = 200.0,
         closes: pd.DataFrame | None = None, vols: pd.DataFrame | None = None) -> tuple[pd.Series, dict]:
+    scfg = scfg or StrategyConfig()
+    rcfg = rcfg or RiskConfig()
     if closes is None:
         closes, vols = load_data(scfg.whitelist)
     vol24 = vols.rolling(24).sum()

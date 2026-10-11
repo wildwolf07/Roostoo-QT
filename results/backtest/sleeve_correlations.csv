@@ -1,0 +1,5 @@
+,mom_ls,mom_lo,mom_filtered,lowrisk_lo
+mom_ls,1.0,0.243,0.716,-0.129
+mom_lo,0.243,1.0,0.064,0.828
+mom_filtered,0.716,0.064,1.0,-0.16
+lowrisk_lo,-0.129,0.828,-0.16,1.0

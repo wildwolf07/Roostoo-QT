@@ -33,7 +33,7 @@ class RiskState:
         }
 
     @classmethod
-    def from_json(cls, d: Optional[dict]) -> "RiskState":
+    def from_json(cls, d: Optional[dict]) -> RiskState:
         s = cls()
         if not d:
             return s

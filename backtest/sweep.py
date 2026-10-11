@@ -4,7 +4,6 @@ Usage: python -m backtest.sweep
 """
 from __future__ import annotations
 
-import itertools
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import replace
 

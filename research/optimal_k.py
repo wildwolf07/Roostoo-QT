@@ -70,7 +70,6 @@ def main() -> None:
     Mp = float((1 - past / np.maximum.accumulate(past)).max())
     x = (1 + port_s).resample("1D").prod().sub(1).iloc[-args.recent_days:]
     mu, s2, d2 = x.mean(), (x ** 2).mean(), (np.minimum(x, 0) ** 2).mean()
-    n = H / 24
     D = []
     for s in range(0, len(port) - H, 24):
         e = np.cumprod(1 + port[s: s + H])
@@ -112,7 +111,7 @@ def main() -> None:
                 m = np.add.reduceat(mkt[s: s + H], np.arange(0, H, 24))
                 for _ in range(5):
                     R, C = competitor_paths(field, m, now_h / 24, now_h // 24 + 1, rng, mdd_obs, beta_obs)
-                    in20 = (R > eq[-1] - 1).sum() < 20
+                    in20 = (eq[-1] - 1 < R).sum() < 20
                     better = (C[np.argsort(-R)[:19]] > sc["daily"]).sum() if in20 else 99
                     t5.append(better < 5)
                     t1.append(better == 0)
