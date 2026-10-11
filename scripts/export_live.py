@@ -4,7 +4,8 @@ Prints the contest-window summary, one row per contest day (days run 12:00 to 12
 organisers' window does), and execution statistics. Copy the output into
 results/forward_test/LIVE_RESULTS.md. No API calls; safe to run while the bot is trading.
 
-Usage (EC2): cd /opt/roostoo-bot && sudo -u ec2-user .venv/bin/python -m scripts.export_live
+Usage (EC2): cd /opt/roostoo-bot && sudo -u ec2-user .venv/bin/python -m scripts.export_live [--curve]
+  --curve  also print the hourly equity curve as CSV (ts,equity) for results/forward_test/live_equity.csv
 """
 from __future__ import annotations
 
@@ -23,6 +24,7 @@ DAY_SHIFT = pd.Timedelta(hours=12)          # contest days start at 12:00 UTC (1
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--mode", default="live")
+    ap.add_argument("--curve", action="store_true", help="also print the hourly equity curve as CSV")
     args = ap.parse_args()
     con = sqlite3.connect(RuntimeConfig().db_path.with_name(f"bot_{args.mode}.db"))
     eq = pd.read_sql("SELECT ts, equity, gross_exposure FROM equity", con)
@@ -82,6 +84,11 @@ def main() -> None:
     print(f"- Fees paid: ${orders.commission.fillna(0).sum():,.2f} ({orders.commission.fillna(0).sum() / initial:.3%} of initial equity).")
     ok_n = int(calls.loc[calls.success == 1, "n"].sum())
     print(f"- API calls: {int(calls.n.sum())}, {ok_n / max(int(calls.n.sum()), 1):.2%} successful.")
+    if args.curve:
+        print("\n```csv\nts,equity")
+        for t, v in hourly.items():
+            print(f"{t:%Y-%m-%dT%H},{v:.2f}")
+        print("```")
 
 
 if __name__ == "__main__":
