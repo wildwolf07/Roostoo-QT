@@ -12,7 +12,7 @@ instance → Connect → Session Manager → Connect.** Paste one block at a tim
 ```bash
 cd /opt/roostoo-bot && sudo -u ec2-user .venv/bin/python -m scripts.daily_report
 ```
-Healthy: equity close to the previous day's, `gross` around 55–70% (5–8% while the lock-in is active), recent orders with
+Healthy: equity close to the previous day's, `gross` around 55–70% (4–6% while the lock-in is active), recent orders with
 status FILLED / OPEN / CLOSED, no loop errors. Today's rebalance runs at **00:01 UTC (05:31 IST)**; if it placed no orders, a safety-net rebalance runs at **12:00 UTC (17:30 IST)**.
 
 ### Is the bot running?
@@ -57,7 +57,7 @@ final version is tagged `v1.0-submission`.
 - 3–15 orders at each daily rebalance; few or none in between.
 - Limit orders that are CANCELED and then filled at market: that is the maker-first execution.
 - **Endgame lock-in (from Oct 10):** the bigger our gain, the smaller the book. While our gain is
-  +0.25% or more, the bot runs at 10% of its normal size (`gross` around 5–8%). Only if the gain
+  +0.25% or more, the bot runs at 7.5% of its normal size (`gross` around 4–6%). Only if the gain
   is nearly gone does it scale back up, reaching full size at 0% or a loss. Right after the rebalance that turns this on, expect one
   large round of SELL / short-close orders: that is the book shrinking, not a problem. With the
   small book the bot trades every update of $50 or more, so expect roughly 10–15 small orders a day.

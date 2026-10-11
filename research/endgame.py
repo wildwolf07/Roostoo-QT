@@ -116,14 +116,24 @@ def waypoint_path(points: str, now_h: int) -> np.ndarray:
 
 
 def competitor_paths(field: np.ndarray, mkt_daily: np.ndarray, elapsed: float, now_day: int,
-                     rng: np.random.Generator) -> tuple[np.ndarray, np.ndarray]:
+                     rng: np.random.Generator, mdd_obs: np.ndarray | None = None,
+                     beta_obs: np.ndarray | None = None) -> tuple[np.ndarray, np.ndarray]:
     """Daily equity paths for the other teams: the realised part is a random path that ends at each
     team's current return; the future is beta * market + noise. Volatility is calibrated from how far
-    each team has moved from the median so far (floored), beta is lower for teams that barely move."""
+    each team has moved from the median so far (floored), beta is lower for teams that barely move.
+    Where a team's max drawdown so far is observed (mdd_obs, NaN = unknown), it sets the volatility
+    (E[max DD] ~ 1.25 sigma sqrt(T) for a driftless walk, Magdon-Ismail & Atiya 2004) and is a floor
+    for the team's final max drawdown. Where a team's market exposure is known from its public portfolio
+    (beta_obs, e.g. 0.30 for a 30% long-only crypto book; NaN = unknown) it replaces the random beta."""
     n = len(field)
     disp = np.abs(field - np.median(field)) / np.sqrt(max(elapsed, 1.0))
+    if mdd_obs is not None:
+        known = ~np.isnan(mdd_obs)
+        disp = np.where(known, np.nan_to_num(mdd_obs) / (1.25 * np.sqrt(max(elapsed, 1.0))), disp)
     sig = np.maximum(disp * rng.uniform(0.8, 1.25, n), 0.002)
     beta = rng.uniform(0, 0.5, n) * np.minimum(1.0, disp / 0.005)
+    if beta_obs is not None:
+        beta = np.where(np.isnan(beta_obs), beta, np.nan_to_num(beta_obs))
     past = rng.normal(0, 1, (n, now_day)) * sig[:, None]
     past = past - past.mean(axis=1, keepdims=True) + (np.log1p(field) / now_day)[:, None]
     fut_days = 14 - now_day
@@ -132,6 +142,11 @@ def competitor_paths(field: np.ndarray, mkt_daily: np.ndarray, elapsed: float, n
     eq = np.exp(logs)
     R = eq[:, -1] - 1
     mdd = (1 - eq / np.maximum.accumulate(eq, axis=1)).max(axis=1)
+    if mdd_obs is not None:
+        mdd = np.maximum(mdd, np.nan_to_num(mdd_obs))
+    # every team starts at its peak ($100k), so a team now below water has already drawn down at least
+    # that much: max DD >= max(0, -return so far)
+    mdd = np.maximum(mdd, np.maximum(0.0, -field))
     r = np.diff(eq, axis=1) / eq[:, :-1]
     mean, sd = r.mean(axis=1), r.std(axis=1, ddof=1)
     down = np.maximum(np.sqrt((np.minimum(r, 0) ** 2).mean(axis=1)), 1e-6)

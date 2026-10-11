@@ -120,7 +120,7 @@ class RiskConfig:
     # only adds loss risk; research/endgame.py, DECISIONS.md #13.)
     lockin_start: datetime = datetime(2026, 10, 10, 12, 0, tzinfo=timezone.utc)
     lockin_full_at: float = 0.0025     # contest return at which the minimum multiplier is reached (0 = off)
-    lockin_min_mult: float = 0.10
+    lockin_min_mult: float = 0.075    # between k*_Sharpe 0.05-0.08; keeps >=3 orders every day (docs/ENDGAME.md)
 
 
 @dataclass(frozen=True)

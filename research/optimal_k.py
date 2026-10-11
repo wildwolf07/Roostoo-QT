@@ -40,6 +40,10 @@ def main() -> None:
     ap.add_argument("--now", required=True)
     ap.add_argument("--k-now", type=float, default=1.0)
     ap.add_argument("--field", type=float, nargs="*", default=None)
+    ap.add_argument("--field-mdd", type=float, nargs="*", default=None,
+                    help="observed max drawdown so far for each --field team, same order (nan = unknown)")
+    ap.add_argument("--field-beta", type=float, nargs="*", default=None,
+                    help="known market exposure for each --field team, same order (nan = unknown)")
     ap.add_argument("--step", type=int, default=12)
     ap.add_argument("--recent-days", type=int, default=365, help="window for the strategy's daily moments")
     args = ap.parse_args()
@@ -82,6 +86,10 @@ def main() -> None:
     grid["live rule: 1x->0.10x by +0.25%"] = k_lockin(0.0025, 0.10)
     grid["old rule: 1x->0.15x by +1%"] = k_lockin(0.01, 0.15)
     field = np.array(args.field) if args.field else None
+    mdd_obs = np.array(args.field_mdd) if args.field_mdd else None
+    beta_obs = np.array(args.field_beta) if args.field_beta else None
+    if mdd_obs is not None:
+        assert field is not None and len(mdd_obs) == len(field), "--field-mdd must align with --field"
     rng = np.random.default_rng(3)
     rows = []
     for label, policy in grid.items():
@@ -103,7 +111,7 @@ def main() -> None:
             if field is not None:
                 m = np.add.reduceat(mkt[s: s + H], np.arange(0, H, 24))
                 for _ in range(5):
-                    R, C = competitor_paths(field, m, now_h / 24, now_h // 24 + 1, rng)
+                    R, C = competitor_paths(field, m, now_h / 24, now_h // 24 + 1, rng, mdd_obs, beta_obs)
                     in20 = (R > eq[-1] - 1).sum() < 20
                     better = (C[np.argsort(-R)[:19]] > sc["daily"]).sum() if in20 else 99
                     t5.append(better < 5)

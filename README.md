@@ -162,7 +162,7 @@ Fees were the main reason our first design failed, so turnover is designed down 
 | Position cap | ≤30% of equity per coin; gross ≤95%; no leverage |
 | Drawdown brake | catastrophe-only: linear de-risking from 6% to 12% drawdown from peak (down to ×0.25). Tighter brakes whipsaw (RESEARCH.md) |
 | Trailing stop | available but **disabled**: lowered Sharpe in both periods (RESEARCH.md, tail study) |
-| Endgame lock-in | from Oct 10: exposure ×1 → ×0.10 as the banked contest return goes 0 → +0.25% (back to full size only if the gain is gone). The finalists' score is a ratio over the window, so after a gain, extra risk grows the denominators faster than the numerators (closed-form optimum and audit in [docs/ENDGAME.md](docs/ENDGAME.md); DECISIONS.md #11–14) |
+| Endgame lock-in | from Oct 10: exposure ×1 → ×0.075 as the banked contest return goes 0 → +0.25% (back to full size only if the gain is gone). The finalists' score is a ratio over the window, so after a gain, extra risk grows the denominators faster than the numerators (closed-form optimum and audit in [docs/ENDGAME.md](docs/ENDGAME.md); DECISIONS.md #11–14) |
 | Taper | final ~36h of the contest → exposure ×0.5 (on top of the lock-in) |
 | Diversification | 4 sleeves × 4 coins per side over 25 coins; worst single-coin day in backtest −2.1% of equity |
 | Operational | price sanity check (±3% of ticker), order-size cap, state rebuilt from the exchange every loop, stale orders cancelled on restart, data-source fallback, bounded rebalance retries |

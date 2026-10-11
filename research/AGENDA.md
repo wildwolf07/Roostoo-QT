@@ -187,3 +187,12 @@ Ground rules
   page says before Oct 14 and $100k). Submit the repo link immediately to be safe.
 - Literature verified (journal records): BHS 1996, Chevalier-Ellison 1997, BPS 2007 RFS 20(5),
   Browne 1999 AAP 31(2), Carpenter 2000, Grossman-Zhou 1993, Magdon-Ismail-Atiya 2004, Lo 2002.
+
+## Oct 11 (08:00-10:00 UTC): competitors from public app data
+- Leading India team: 15 orders (10 x ~$3k buys at Oct 8 16:59 UTC, small sells Oct 10-11); equity
+  rebuilt from Binance hourly prices = 101,618 vs app 101,550, cash exact. Max DD 0.57%, daily
+  +0.60/+0.44/+0.68/-0.11%, 30% long-only (about 10x our daily risk from here).
+- #2: very active long/short incl. large stock-token shorts, traded every day since Oct 5.
+  #3: +1.0% thanks to one small cap (+66%); realised losses on 8 coins; DD est. >= 3%.
+- Model: --field-mdd / --field-beta, plus DD >= -return for teams below water. Live rule P(top5)
+  85.5%, P(#1) 20%. Floor x0.075 (11 orders/day, never <3): P(top5) 86.1%, P(#1) 23.2%. ADOPTED.
