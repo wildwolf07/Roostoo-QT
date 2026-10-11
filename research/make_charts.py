@@ -106,8 +106,9 @@ def main() -> None:
         ["3 coins/side", "4 coins/side", "5 coins/side"],
         "Breadth: Sharpe 2023-2026 vs universe size (fees incl.)"))
     (OUT / "crashes.svg").write_text(bar_chart(
-        [("LUNA 2022", [-6.7, -23.2, -18.8]), ("3AC 2022", [-4.2, -21.2, -35.9]),
-         ("FTX 2022", [-1.5, -18.8, -18.0]), ("Oct-10 2025", [-2.3, -20.6, -9.4])],
+        # values from results/backtest/crash_events.csv (python -m research.make_results)
+        [("LUNA 2022", [-6.5, -30.1, -18.6]), ("3AC 2022", [-4.1, -26.1, -30.9]),
+         ("FTX 2022", [-1.5, -22.4, -17.5]), ("Oct-10 2025", [-2.0, -20.4, -9.1])],
         ["Ensemble", "Equal-weight market", "BTC"],
         "Crash windows: return (%)", fmt=lambda v: f"{v:.1f}", colors=(BLUE, MUTED, ORANGE)))
     print("wrote", sorted(p.name for p in OUT.glob("*.svg")))

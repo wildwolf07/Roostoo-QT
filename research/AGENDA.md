@@ -209,3 +209,15 @@ Ground rules
   145 +2.0, 109 +1.8, us +0.9, 180 +0.8 (was -0.8 => DD >= 1.2%), 113 +0.6 (was -1.2), 139 +0.5,
   179/116 0.0; India #20 now -3.4%. Model on this field (k-now 0.34 until Oct 12 00:01 UTC):
   x0.075 P(top5) 95.2%, P(#1 comp) 50.9%, P(R<0) ~0%; 1x 44.3% / 8.1%. No change.
+
+## Oct 12 (21:00-23:00 UTC Oct 11): organisers' final screening rules
+- Announcement (WhatsApp, Oct 11): screening = 50% portfolio ratios (Sortino 40 / Sharpe 30 /
+  Calmar 30) + 50% strategy repo and README (private GitHub repo shared with judges, including
+  backtest/forward-test code and results; thorough README). Submit via the Google Form by
+  Oct 15 12:00 HKT (04:00 UTC). <8 trading days and HFT/latency arb: penalties (max 30% of the 50%),
+  not disqualification. Return not listed.
+- Actions: README rewritten for judges (summary, live forward test, strategy, robustness evidence,
+  real-market viability, risk incl. lock-in framing, methodology and reproduction, repo map);
+  research/make_results.py -> results/backtest/ (SUMMARY.md, daily equity, yearly, 14-day windows,
+  crashes); scripts/export_live.py -> results/forward_test/; crash chart regenerated from the bundle;
+  PLAN.md labelled historical.

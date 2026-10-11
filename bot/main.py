@@ -213,7 +213,7 @@ def _stop(signum, frame):
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Roostoo trend/regime trading bot")
+    parser = argparse.ArgumentParser(description="Roostoo-QT autonomous ensemble trading bot")
     parser.add_argument("--mode", choices=["paper", "test", "live"], help="overrides MODE in .env")
     parser.add_argument("--once", action="store_true", help="run a single decision cycle and exit")
     args = parser.parse_args()

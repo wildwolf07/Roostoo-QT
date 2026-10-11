@@ -1,3 +1,6 @@
+> **Historical document.** This is our original plan from Oct 3. The strategy and rules evolved:
+> see [README.md](README.md) for the live design and [DECISIONS.md](DECISIONS.md) for every change.
+
 # Roostoo APAC Quant Hackathon — Master Plan (Team150-negExp)
 
 _Written 2026-10-03. Live trading: Oct 4 → Oct 17. Repo deadline: before Oct 14._

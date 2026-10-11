@@ -14,6 +14,12 @@ days) and finish in its region's top 20 by return. The top 20 are then ranked by
 On the India leaderboard of Oct 11, the #20 return was about −5%, and only four other teams were
 clearly positive. So the return screen is not binding for us. **The composite decides.**
 
+**Update (organisers' announcement, Oct 11).** The finalist screening is **50% portfolio ratios**
+(40% Sortino, 30% Sharpe, 30% Calmar) and **50% the strategy repository and README**. Fewer than 8
+trading days, or HFT/latency arbitrage, now carry a scoring penalty rather than disqualification.
+Return is not listed as a criterion, so maximising the ratios, which is what this document derives,
+is exactly the portfolio half of the objective.
+
 ## 2. Why ratios change the problem
 
 Sharpe, Sortino and Calmar are invariant to leverage only while nothing is banked. Split the window's
