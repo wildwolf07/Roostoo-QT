@@ -58,6 +58,7 @@ final version is tagged `v1.0-submission`.
 - Limit orders that are CANCELED and then filled at market: that is the maker-first execution.
 - **Endgame lock-in (from Oct 10):** the bigger our gain, the smaller the book. While our gain is
   +0.25% or more, the bot runs at 10% of its normal size (`gross` around 5–8%). Only if the gain
-  is nearly gone does it scale back up, reaching full size at 0% or a loss. Right after the deploy that turns this on, expect one
-  large round of SELL / short-close orders: that is the book shrinking, not a problem.
+  is nearly gone does it scale back up, reaching full size at 0% or a loss. Right after the rebalance that turns this on, expect one
+  large round of SELL / short-close orders: that is the book shrinking, not a problem. With the
+  small book the bot trades every update of $50 or more, so expect roughly 10–15 small orders a day.
 - From Oct 16 12:00 UTC exposure is halved again (end-of-contest taper, on top of the lock-in).

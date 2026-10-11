@@ -128,6 +128,12 @@ class ExecutionConfig:
     deadband_frac: float = 0.02        # min |target-current| as fraction of equity
     min_order_usd: float = 200.0
     daily_rebalance_deadband: float = 0.005
+    # Small (locked-in) book: below this risk multiplier, trade every tranche update of at least
+    # small_book_min_order. A 2%-of-equity deadband on a 10% book skips most updates (~3 orders a day,
+    # fewer than 3 on a third of days); $50 gives ~13 a day for ~$1.40 of fees (8-active-day rule).
+    small_book_mult: float = 0.5
+    small_book_deadband: float = 0.0005
+    small_book_min_order: float = 50.0
     limit_timeout_sec: int = 180       # maker order wait before market fallback
     max_order_frac: float = 0.35       # single order notional cap vs equity
     max_price_deviation: float = 0.03  # reject orders far from current ticker

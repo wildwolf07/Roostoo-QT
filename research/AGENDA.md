@@ -173,3 +173,17 @@ Ground rules
 - Re-run with --k-now 0.34 (live multiplier until the next rebalance; earlier runs assumed 1x):
   old rule (re-risks as the gain shrinks) P(R<0) 13%, P(top5) 79%; fixed 0.10x 1% / 93%; new rule
   1x -> 0.10x by +0.25% 1% / 94% / P(#1) 28%. At +0.3% banked: 60% -> 77%. ADOPTED (DECISIONS #13).
+
+## Oct 11 (06:00-09:00 UTC): systematic audit (docs/ENDGAME.md)
+- Simulator: score matches bot/metrics.py up to the day-boundary convention; fixed the start-state
+  bug (--k-now) and the realised path (waypoints from the bot's log: +0.03%, +0.75%, peak +1.12%,
+  now +0.65%, DD 0.46%).
+- Closed form: k*_Sharpe = mu Q/(S s2) = 0.05 (0.08 with the 2023-26 mean), k*_Sortino = 0.003,
+  k*_Calmar ~ Mp/Dn = 0.28. research/optimal_k.py grid: P(top5) ~87% flat for k in [0, 0.10],
+  80.5% at 0.25, 52% at 1x; P(#1) 29% at cash -> 17.5% at 0.10. Live 0.10x = constrained optimum.
+- Planner dry-run at 0.10x: 3 orders/day median, <3 on 38% of days -> $50 threshold for small books
+  (13/day, never <3, ~$1.40/day). Market-data cache for a full-day outage. Tests 29/29.
+- Older Internshala listing shows repo deadline Oct 9 and a $1M portfolio (outdated; the official
+  page says before Oct 14 and $100k). Submit the repo link immediately to be safe.
+- Literature verified (journal records): BHS 1996, Chevalier-Ellison 1997, BPS 2007 RFS 20(5),
+  Browne 1999 AAP 31(2), Carpenter 2000, Grossman-Zhou 1993, Magdon-Ismail-Atiya 2004, Lo 2002.

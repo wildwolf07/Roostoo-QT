@@ -62,6 +62,9 @@ class MarketData:
         self.interval = interval
         self.history_bars = history_bars
         self.session = requests.Session()
+        # last good history per coin: if every data host fails, trade on slightly stale bars rather
+        # than skip the day (7-14 day momentum barely moves in a day; 8-active-day rule)
+        self.cache: dict = {}
 
     def hourly_closes(self, coins: Iterable[str]) -> pd.DataFrame:
         """Closed hourly bars for each coin, aligned into one DataFrame (columns = coins)."""
@@ -73,11 +76,14 @@ class MarketData:
                 host = hosts[attempt % len(hosts)]
                 try:
                     df = fetch_klines(coin, self.interval, self.history_bars, host, session=self.session)
-                    series[coin] = closed_bars_only(df)["close"]
+                    series[coin] = self.cache[coin] = closed_bars_only(df)["close"]
                     break
                 except Exception as exc:  # network / HTTP errors
                     log.warning("klines %s via %s failed (%s), attempt %d", coin, host, exc, attempt + 1)
                     time.sleep(1 + attempt)
+            if coin not in series and coin in self.cache:
+                log.warning("klines %s unavailable on every host; using cached bars to %s", coin, self.cache[coin].index[-1])
+                series[coin] = self.cache[coin]
         if not series:
             return pd.DataFrame()
         return pd.DataFrame(series).sort_index()

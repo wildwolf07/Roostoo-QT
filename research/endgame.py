@@ -104,6 +104,17 @@ def realised_path(banked: float, now_h: int, mdd: float) -> np.ndarray:
     return eq
 
 
+def waypoint_path(points: str, now_h: int) -> np.ndarray:
+    """Hourly equity from Oct 4 to now from observed waypoints "ISO=return,ISO=return,..."
+    (contest return at each time, linearly interpolated; flat before the first waypoint)."""
+    ts, vals = [], []
+    for item in points.split(","):
+        t, v = item.split("=")
+        ts.append((pd.Timestamp(t, tz="UTC") - START) / pd.Timedelta(hours=1))
+        vals.append(float(v))
+    return 1 + np.interp(np.arange(now_h + 1), ts, vals, left=0.0, right=vals[-1])
+
+
 def competitor_paths(field: np.ndarray, mkt_daily: np.ndarray, elapsed: float, now_day: int,
                      rng: np.random.Generator) -> tuple[np.ndarray, np.ndarray]:
     """Daily equity paths for the other teams: the realised part is a random path that ends at each
@@ -137,6 +148,7 @@ def main() -> None:
     ap.add_argument("--field", type=float, nargs="*", default=None, help="current returns of other teams in region")
     ap.add_argument("--step", type=int, default=6, help="hours between historical start points")
     ap.add_argument("--k-now", type=float, default=1.0, help="exposure multiplier live until the next rebalance")
+    ap.add_argument("--path", default=None, help='observed waypoints "ISO=return,..." (overrides --banked/--mdd-so-far shape)')
     args = ap.parse_args()
 
     now = pd.Timestamp(args.now, tz="UTC").floor("1h")
@@ -150,7 +162,7 @@ def main() -> None:
     port = ((W.shift(1) * rets).sum(axis=1) - FEE * W.diff().abs().sum(axis=1).fillna(0)).iloc[800:].values
     gross = W.abs().sum(axis=1).iloc[800:].values
     mkt = rets.mean(axis=1).iloc[800:].values
-    past = realised_path(args.banked, now_h, args.mdd_so_far)
+    past = waypoint_path(args.path, now_h) if args.path else realised_path(args.banked, now_h, args.mdd_so_far)
     H = HOURS - now_h
     starts = range(0, len(port) - H, args.step)
     print(f"now {now:%Y-%m-%d %H:%M} UTC, banked {args.banked:+.2%}, {H} hours left, next rebalance in {to_rebal}h; "

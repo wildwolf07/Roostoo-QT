@@ -287,6 +287,21 @@ class TestSchedulerRetry(unittest.TestCase):
         self.assertEqual(len(calls), 1)
 
 
+class TestMarketDataCache(unittest.TestCase):
+    def test_falls_back_to_cached_bars_when_all_hosts_fail(self):
+        from unittest import mock
+        from bot.data import market_data as md
+        idx = pd.date_range(end=NOW - timedelta(hours=1), periods=5, freq="1h")
+        good = pd.DataFrame({"close": [1.0, 2.0, 3.0, 4.0, 5.0], "close_time": idx + timedelta(minutes=59, seconds=59)}, index=idx)
+        m = md.MarketData("https://example.invalid", history_bars=5)
+        with mock.patch.object(md, "fetch_klines", return_value=good), mock.patch.object(md, "closed_bars_only", side_effect=lambda d: d):
+            first = m.hourly_closes(["BTC"])
+        with mock.patch.object(md, "fetch_klines", side_effect=RuntimeError("down")), mock.patch.object(md.time, "sleep"):
+            second = m.hourly_closes(["BTC", "ETH"])
+        self.assertEqual(list(second.columns), ["BTC"])                  # ETH never seen: still skipped
+        self.assertTrue(second["BTC"].equals(first["BTC"]))
+
+
 class TestHourlyStep(unittest.TestCase):
     def test_deadband_scales_with_exposure(self):
         from bot import main as m
@@ -305,12 +320,16 @@ class TestHourlyStep(unittest.TestCase):
         ticker = {c: {"last": 10.0, "bid": 10.0, "ask": 10.0, "volume_usd": 1e6 + i} for i, c in enumerate(coins)}
         pf = Portfolio(usd_free=101_000, usd_total=101_000, values={})
         seen = []
-        bot.executor = type("E", (), {"rebalance": lambda self, t, deadband=None, **k: seen.append(deadband) or 0})()
-        for equity, band in ((100_000, 0.02), (101_000, 0.002)):
-            bot.risk = RiskManager(RiskConfig(lockin_start=NOW), initial_equity=100_000)
+        bot.executor = type("E", (), {"rebalance": lambda self, t, deadband=None, min_order_usd=None, **k:
+                                      seen.append((deadband, min_order_usd)) or 0})()
+        # full book: normal 2% deadband; half book: scaled; locked-in small book: $50 threshold
+        for equity, band, min_usd in ((100_000, 0.02, None), (100_100, 0.02 * 0.64, None), (101_000, 0.0005, 50.0)):
+            bot.risk = RiskManager(RiskConfig(lockin_start=NOW, lockin_full_at=0.0025, lockin_min_mult=0.10),
+                                   initial_equity=100_000)
             pf.usd_free = pf.usd_total = equity
             self.assertTrue(bot.hourly_step(NOW, pf, ticker))
-            self.assertAlmostEqual(seen[-1], band)
+            self.assertAlmostEqual(seen[-1][0], band)
+            self.assertEqual(seen[-1][1], min_usd)
 
 
 if __name__ == "__main__":

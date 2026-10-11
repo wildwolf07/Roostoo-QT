@@ -92,8 +92,8 @@ numerator, and further risk grows the denominators (volatility, downside deviati
 faster than the numerators. `research/endgame.py` shows that with +1% banked, a rule moving exposure
 from 1× to 0.25× scores higher at every quantile under all four readings of the formula we tested:
 median composite 10.6 → 30.0, P(loss) 22% → 8%. Median return falls only from +1.20% to +1.15%, so
-the top-20 return cut is unaffected. That is the endgame lock-in (DECISIONS.md #11). On the real India leaderboard, the floor was
-set at 0.15×: P(top 5 by composite) 62% at 1× → 93–94% (DECISIONS.md #12).
+the top-20 return cut is unaffected. That is the endgame lock-in (DECISIONS.md #11). Refined on the real India leaderboard to ×0.10 from +0.25%
+banked, which is close to the closed-form optimum k* = (μ/s²)·(Q/S) (docs/ENDGAME.md, DECISIONS.md #12–14).
 
 ### 14. "Is any of this manual?"
 No. A single autonomous process under systemd on EC2. Deploys only via committed code

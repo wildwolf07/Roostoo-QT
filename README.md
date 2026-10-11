@@ -162,7 +162,7 @@ Fees were the main reason our first design failed, so turnover is designed down 
 | Position cap | ≤30% of equity per coin; gross ≤95%; no leverage |
 | Drawdown brake | catastrophe-only: linear de-risking from 6% to 12% drawdown from peak (down to ×0.25). Tighter brakes whipsaw (RESEARCH.md) |
 | Trailing stop | available but **disabled**: lowered Sharpe in both periods (RESEARCH.md, tail study) |
-| Endgame lock-in | from Oct 10: exposure ×1 → ×0.10 as the banked contest return goes 0 → +0.25% (back to full size only if the gain is gone). The finalists' score is a ratio over the window, so after a gain, extra risk grows the denominators faster than the numerators (`research/endgame.py`, DECISIONS.md #11–13) |
+| Endgame lock-in | from Oct 10: exposure ×1 → ×0.10 as the banked contest return goes 0 → +0.25% (back to full size only if the gain is gone). The finalists' score is a ratio over the window, so after a gain, extra risk grows the denominators faster than the numerators (closed-form optimum and audit in [docs/ENDGAME.md](docs/ENDGAME.md); DECISIONS.md #11–14) |
 | Taper | final ~36h of the contest → exposure ×0.5 (on top of the lock-in) |
 | Diversification | 4 sleeves × 4 coins per side over 25 coins; worst single-coin day in backtest −2.1% of equity |
 | Operational | price sanity check (±3% of ticker), order-size cap, state rebuilt from the exchange every loop, stale orders cancelled on restart, data-source fallback, bounded rebalance retries |
@@ -202,6 +202,7 @@ Service restarts happen only to load newly committed code.
 |---|---|
 | [RESEARCH.md](RESEARCH.md) | Every study: literature, signal IC tables, portfolio tests, robustness, stress tests, statistics |
 | [DECISIONS.md](DECISIONS.md) | Every live change and every rejected idea, with numbers and commits |
+| [docs/ENDGAME.md](docs/ENDGAME.md) | Contest-endgame risk: closed-form optimal exposure, simulation, audit, literature |
 | [docs/FINALE_DECK.md](docs/FINALE_DECK.md) | Presentation storyline |
 | [docs/JUDGES_QA.md](docs/JUDGES_QA.md) | Hard questions and evidence-backed answers |
 | [docs/RUNBOOK.md](docs/RUNBOOK.md) | Operations: daily check, deploy, rollback, risk switch |
@@ -213,5 +214,5 @@ Service restarts happen only to load newly committed code.
 - Every order is logged with the signal reason that produced it (`orders.reason`), and every API request with its success or failure status (`api_calls`).
 - No high-frequency trading, market making or arbitrage: one strategy rebalance per day. Limit orders are used only to pay the lower maker fee on our own directional trades.
 - Spot only, 1× long and 1× short, no leverage (gross exposure ≤ 95% of equity).
-- At least 8 active trading days: the bot trades every day, with a 12:00 UTC safety net that lands on the same calendar day in UTC, HKT and IST.
+- At least 8 active trading days: the bot trades every day (about 13 orders a day even with the small locked-in book), with a 12:00 UTC safety net that lands on the same calendar day in UTC, HKT and IST, and cached market data if every data host is down.
 - API keys live only in `.env` (gitignored); a pre-commit hook blocks secrets.
