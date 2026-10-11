@@ -113,3 +113,17 @@ there is nothing to protect and a negative score cannot qualify; (c) **the same 
 trade every day, only smaller. It is the textbook result for evaluation tournaments: leaders cut
 risk and laggards add it (Brown, Harlow & Starks 1996; Chevalier & Ellison 1997; Browne 1999,
 "Reaching goals by a deadline"). We show the full trade-off table, including the return we give up.
+
+### 17. "How does your approach compare with what wins other quant competitions?"
+We studied public postmortems from top teams in IMC Prosperity (2024–26) and WorldQuant IQC's
+scoring rules. The recurring principles are the ones we built on:
+- risk matched to the scoring rule and to your standing: a 2nd-place Prosperity team regretted
+  carrying unhedged variance while ahead, which is our endgame lock-in;
+- simple, first-principles signals with parameters picked from plateaus;
+- held-out validation, with the backtester treated as a filter;
+- cost-aware execution, breadth and diversification;
+- fail-safes for hard-coded assumptions;
+- a full audit trail of what ran and why.
+
+IQC's fitness metric, Sharpe × √(returns / max(turnover, 12.5%)), rewards the same thing our 3-day
+tranching does: keep the Sharpe ratio while cutting turnover.
