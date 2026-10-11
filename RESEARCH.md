@@ -4,20 +4,26 @@
 beta-neutral, momentum long-only, filtered momentum long/short, low-risk long-only) on the 25
 most liquid of 29 coins. 168h/336h momentum, 3 daily tranches (~3-day holding period), 1.2%
 daily volatility target, catastrophe-only 6–12% drawdown brake, no per-coin stops,
-maker-first execution. **Endgame lock-in** (from Oct 10): exposure ×1 → ×0.25 as the banked contest
-return goes 0 → +1%, because the finalists' score is a ratio over the window (last section).
+maker-first execution. **Endgame lock-in** (from Oct 10): exposure ×1 → ×0.075 as the banked contest
+return goes 0 → +0.25%, because the finalists' score is a ratio over the window (last section).
 
 | Evidence | Result |
 |---|---|
-| 2023-01 → 2026-10, fees included | +84%, Sharpe 1.27, max drawdown 16.9%, every calendar year positive |
-| Unseen 2021–22 (LUNA, 3AC, FTX) | +19.8% while BTC fell −49.2% |
-| 14-day windows, out-of-sample | median composite 4.0, 67% positive |
+| 2023-01 → 2026-10, fees included (research panel) | +84%, Sharpe 1.27, max drawdown 16.9%, every calendar year positive |
+| 2021-02 → 2026-10 (combined panel, `results/backtest`) | CAGR +15.6%, Sharpe 1.07 vs BTC 0.53, max drawdown 28.3% vs 77.2% |
+| Unseen 2021–22 (LUNA, 3AC, FTX) | +19.8% while BTC fell 54% |
+| 14-day windows, out-of-sample | median composite 4.0, 64% positive |
 | Statistical confidence | PSR 99%, deflated Sharpe 64–71% |
 | Live code = research code | parity difference 8e-17 |
 
 How we got here: v0 (fast trend) failed → IC diagnosis → v1 (slow momentum) → 3.8-year
 literature-driven signal study → v2 ensemble → overlay, breadth, stop, tail, stress and
 statistics checks → v2.1. Rejected ideas and their numbers are in DECISIONS.md.
+
+Two data panels appear below: the **research panel** (2023-01 → 2026-10, 31 coins), used for every
+design decision, and the **combined panel** (2021-02 → 2026-10), which adds the unseen 2021–22 data
+and produces the headline tables in the README and `results/backtest/`. Their numbers differ slightly
+for the same configuration because the start dates and warm-up periods differ.
 
 The sections below are the chronological lab notebook.
 

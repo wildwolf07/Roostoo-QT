@@ -8,7 +8,8 @@ and shows the evidence for it.
 
 ### 1. Title: "Measure, don't guess: a risk-first crypto ensemble"
 Team150-negExp · Roostoo APAC Quant Hackathon · repo link
-One-line result: *live composite X.XX; backtest +84% (Sharpe 1.27) with a 16.9% max drawdown, 2023–26*
+One-line result: *2021–26: the same return as BTC at a quarter of the volatility (Sharpe 1.07 vs 0.53, max
+drawdown 28% vs 77%); out-of-sample Sharpe 1.83 while BTC fell; live: positive with a sub-0.5% drawdown*
 
 ### 2. The problem, framed by the scoring function
 - Score = 0.4 Sortino + 0.3 Sharpe + 0.3 Calmar, after a top-20-by-return screen.
