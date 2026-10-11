@@ -167,3 +167,6 @@ Ground rules
 - Re-run from this state (banked +0.65%, MDD 0.46%, India field of Oct 10): live rule (floor 0.15)
   P(top5 comp) 73%, P(#1) 18%, median R +0.96%; fixed 0.15x 75% / 18% / +0.65%; 1x 54% / 9%.
   The live rule is as good as a fixed small book and keeps more upside -> no change.
+- Leaderboard refresh (Oct 11 ~05:55 UTC; it updates in snapshots): India 107 +1.6, 109 +1.1,
+  145 +0.9, us +0.7 (#4), 179 0.0, 139 -0.5, 156 -0.6, 180 -0.8, 182 -0.8, ... Re-run on this
+  field: live rule P(top 20) 100%, P(top5 comp) 74%, P(#1) 19% (1x: 54% / 10%). No change.
