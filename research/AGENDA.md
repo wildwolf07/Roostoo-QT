@@ -205,3 +205,7 @@ Ground rules
 - Re-run on the corrected window (days on 12:00 UTC boundaries; no negative contest day so far):
   x0.075 P(top5) 88.9%, P(#1) 29.0%; x0.05 89.9% / 34.7%; 1x 48.6% / 8.1%. Keep x0.075 (activity).
 - Leaderboard 08:10 UTC: India 107 +1.5, 109 +1.1, 145 +0.9, us +0.7 (#4 India, #9 overall).
+- Oct 11 17:10 UTC (crypto rally day): overall #14 (+0.9%), India #4 by return. India: 107 +2.5,
+  145 +2.0, 109 +1.8, us +0.9, 180 +0.8 (was -0.8 => DD >= 1.2%), 113 +0.6 (was -1.2), 139 +0.5,
+  179/116 0.0; India #20 now -3.4%. Model on this field (k-now 0.34 until Oct 12 00:01 UTC):
+  x0.075 P(top5) 95.2%, P(#1 comp) 50.9%, P(R<0) ~0%; 1x 44.3% / 8.1%. No change.
