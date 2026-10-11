@@ -49,6 +49,7 @@ POLICIES = {
     "F50 0.50x": k_fixed(0.50),
     "F35 0.35x": k_fixed(0.35),
     "F25 0.25x": k_fixed(0.25),
+    "F15 0.15x": k_fixed(0.15),
     "L1  lock-in 1x->0.35x by +1%": k_lockin(0.01, 0.35),
     "L2  lock-in 1x->0.35x by +2%": k_lockin(0.02, 0.35),
     "L3  lock-in 1x->0.25x by +1.5%": k_lockin(0.015, 0.25),

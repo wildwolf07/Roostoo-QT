@@ -159,3 +159,11 @@ Ground rules
   .10 95-96%; P(#1) 9% / 21-23% / 27-32% / 31-40%. Adopted floor 0.15 (keeps a tradeable book).
 - Safety net 20:00 -> 12:00 UTC (same calendar day in UTC/HKT/IST). Deadband floor 0.25 -> 0.1.
 - Moonshot on the real field: all-in volatile coin P(top5 comp) 39%, P(#1) 20% vs lock-in 90%/23%.
+
+## Oct 11 morning check (05:50 UTC)
+- 00:01 UTC rebalance: risk_mult 0.34 (gain had slipped to ~+0.78% overnight at full size, so the
+  rule set 1 - 0.85*0.78). 24 orders, gross ~60% -> 22.9%, tracking error 1.1%. Now +0.65%,
+  drawdown 0.46%, own composite estimate 42.4 (Sortino 34, Sharpe 5.7, Calmar 90). Fees 0.14% total.
+- Re-run from this state (banked +0.65%, MDD 0.46%, India field of Oct 10): live rule (floor 0.15)
+  P(top5 comp) 73%, P(#1) 18%, median R +0.96%; fixed 0.15x 75% / 18% / +0.65%; 1x 54% / 9%.
+  The live rule is as good as a fixed small book and keeps more upside -> no change.
