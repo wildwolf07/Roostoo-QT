@@ -253,16 +253,20 @@ class TestSchedulerRetry(unittest.TestCase):
 
     def test_retries_until_success(self):
         bot, calls = self.make_bot([False, RuntimeError("binance down"), True])
-        for minute in range(1, 6):
-            bot.tick(datetime(2026, 10, 10, 0, minute, tzinfo=timezone.utc))
+        with self.assertLogs("bot", level="ERROR") as logs:                # the failure is logged, not printed
+            for minute in range(1, 6):
+                bot.tick(datetime(2026, 10, 10, 0, minute, tzinfo=timezone.utc))
+        self.assertTrue(any("rebalance attempt failed" in m for m in logs.output))
         self.assertEqual(len(calls), 3)
         self.assertEqual(bot.last_rebalance_hour, "2026-10-10T00")
 
     def test_stands_down_after_max_attempts(self):
         from bot.main import MAX_REBALANCE_ATTEMPTS
         bot, calls = self.make_bot([False] * 20)
-        for minute in range(1, 20):
-            bot.tick(datetime(2026, 10, 10, 0, minute, tzinfo=timezone.utc))
+        with self.assertLogs("bot", level="ERROR") as logs:
+            for minute in range(1, 20):
+                bot.tick(datetime(2026, 10, 10, 0, minute, tzinfo=timezone.utc))
+        self.assertTrue(any("standing down" in m for m in logs.output))
         self.assertEqual(len(calls), MAX_REBALANCE_ATTEMPTS)
         self.assertEqual(bot.last_rebalance_hour, "2026-10-10T00")
 
@@ -296,8 +300,10 @@ class TestMarketDataCache(unittest.TestCase):
         m = md.MarketData("https://example.invalid", history_bars=5)
         with mock.patch.object(md, "fetch_klines", return_value=good), mock.patch.object(md, "closed_bars_only", side_effect=lambda d: d):
             first = m.hourly_closes(["BTC"])
-        with mock.patch.object(md, "fetch_klines", side_effect=RuntimeError("down")), mock.patch.object(md.time, "sleep"):
+        with mock.patch.object(md, "fetch_klines", side_effect=RuntimeError("down")), mock.patch.object(md.time, "sleep"), \
+                self.assertLogs("bot.data.market_data", level="WARNING") as logs:
             second = m.hourly_closes(["BTC", "ETH"])
+        self.assertTrue(any("using cached bars" in m for m in logs.output))
         self.assertEqual(list(second.columns), ["BTC"])                  # ETH never seen: still skipped
         self.assertTrue(second["BTC"].equals(first["BTC"]))
 
