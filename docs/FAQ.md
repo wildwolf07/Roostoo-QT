@@ -1,8 +1,8 @@
-# Judges' Q&A preparation
+# FAQ: the hardest questions about the strategy
 
-The hardest questions we expect from quant judges, with short, evidence-backed answers. Every
-number below is reproducible from `research/` (see RESEARCH.md). Rule for the room: **state the
-number, state its uncertainty, say what we would do next.**
+The questions a quantitative reviewer is most likely to ask, with short, evidence-backed answers.
+Every number is reproducible from `research/` (see [RESEARCH.md](../RESEARCH.md)). Each answer gives
+the number, its uncertainty, and what we would do next.
 
 ---
 
@@ -78,7 +78,7 @@ evaluate any ML signal the same way.
 
 ### 12. "What went wrong?"
 - v0 lost money: fast signals, fee-blind. We diagnosed it with IC analysis.
-- We started live trading late (Oct 10) and lost 6 days of the window.
+- We went live late (Oct 9, 21:51 UTC) and missed the first five days of the contest window.
 - Bugs found and fixed through tests and test-account runs: a short-collateral double count,
   a `.gitignore` rule that hid a source folder, and a scheduler that could skip a day's
   rebalance on a data blip. Each is in the commit history.

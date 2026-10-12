@@ -38,7 +38,7 @@ class StrategyConfig:
     bar_interval: str = "1h"
     history_bars: int = 500            # hourly bars fetched for indicators (>= 336 + tranche offsets)
 
-    # Regime (BTC as market factor)
+    # Regime (BTC as market factor): logged with every decision; only the research "trend" style gates on it
     regime_fast_ema: int = 24
     regime_slow_ema: int = 72
 
@@ -47,15 +47,15 @@ class StrategyConfig:
     vol_lookback: int = 72
     max_positions: int = 4
     rebalance_hours: int = 24          # scheduled rebalance every N hours (UTC-aligned)
-    hold_rank_buffer: int = 0          # hysteresis: keep a held coin while rank < max_positions + buffer
+    hold_rank_buffer: int = 0          # trend style only: keep a held coin while rank < max_positions + buffer
     # "trend": regime-gated long momentum (+ optional RISK_OFF short sleeve)
     # "xs": cross-sectional momentum, long the strongest / short the weakest, near market-neutral
     # "blend": 50/50 average of the two styles above
     # "ensemble": 4 equal sleeves (momentum L/S, momentum long, filtered momentum L/S, low-risk long)
     style: str = "ensemble"
     ensemble_n: int = 4                # coins per side in each ensemble sleeve
-    # sleeve weights (mom_ls, mom_lo, mom_filtered_ls, lowrisk_lo). Plan B for a high top-20 cutoff
-    # (research/plan_b.py): (0, 0.5, 0, 0.5) with target_daily_vol 0.016
+    # sleeve weights (mom_ls, mom_lo, mom_filtered_ls, lowrisk_lo). Contingency mix for a high return
+    # cutoff, validated in research/plan_b.py but never used live: (0, 0.5, 0, 0.5) at target_daily_vol 0.016
     sleeve_weights: tuple = (0.25, 0.25, 0.25, 0.25)
     lottery_max_rank: float = 0.7      # filtered sleeve: longs must rank <= 70th pct on 24h MAX return
     short_vol_rank: float = 0.6        # filtered sleeve: shorts must rank <= 60th pct on volatility
@@ -65,7 +65,8 @@ class StrategyConfig:
     tranche_spacing_hours: int = 24
     xs_net_bias: float = 0.0           # xs only: net exposure tilt per regime unit (0 = neutral)
     use_regime_gate: bool = False      # trend only: scale longs by BTC regime (added no value in tests)
-    # Short sleeve: in RISK_OFF, short the weakest coins (Roostoo /v6 shorts, 0.1% fee each way)
+    # Trend style only: in RISK_OFF, short the weakest coins (Roostoo /v6 shorts, 0.1% fee each way).
+    # The ensemble's long/short sleeves always use shorts (see uses_shorts).
     enable_shorts: bool = False
     short_max_positions: int = 3
     short_max_gross: float = 0.6

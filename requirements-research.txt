@@ -1,0 +1,3 @@
+# Research and backtesting extras (the live bot needs only requirements.txt)
+-r requirements.txt
+pyarrow>=14

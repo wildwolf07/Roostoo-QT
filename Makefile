@@ -6,7 +6,7 @@ PY ?= python3
 test:        ## unit tests (29)
 	$(PY) -m unittest -v tests.test_core
 
-data:        ## download hourly data 2021 -> now (spot, funding, premium)
+data:        ## download hourly data 2021 -> now (needs requirements-research.txt)
 	$(PY) -m research.download_pre
 	$(PY) -m research.download_full
 

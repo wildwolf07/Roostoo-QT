@@ -2,6 +2,13 @@
 
 Input is a DataFrame of hourly closes (index = time, columns = coins) that only
 contains information available at decision time.
+
+Layout:
+  market_regime        BTC trend/volatility state (logged with every decision)
+  research styles      momentum_scores / target_weights ("trend") and xs_weights ("xs"), kept so
+                       the earlier designs can be re-run in comparison studies
+  live ensemble        panel_features -> sleeve_weights -> ensemble_weights (style = "ensemble")
+  shared entry points  compute_base_weights (style dispatch + tranche averaging), apply_risk
 """
 from __future__ import annotations
 
@@ -52,6 +59,11 @@ def market_regime(btc: pd.Series, cfg: StrategyConfig) -> Regime:
         "vol_24h": float(vol_24h), "vol_base": float(vol_base or 0), "vol_spike": vol_spike,
     })
 
+
+# --------------------------------------------------------------------------------------------
+# Research styles ("trend", "xs", "blend"): the v0/v1 designs, kept for comparison studies.
+# The live configuration uses style = "ensemble" (below).
+# --------------------------------------------------------------------------------------------
 
 def momentum_scores(closes: pd.DataFrame, cfg: StrategyConfig) -> pd.Series:
     """Average over lookbacks of the vol-normalised log return (a t-stat-like trend score)."""
@@ -175,6 +187,10 @@ def xs_weights(closes: pd.DataFrame, cfg: StrategyConfig, regime: Regime,
     }
     return weights, diagnostics
 
+
+# --------------------------------------------------------------------------------------------
+# Live ensemble: four sleeves on z-scored features (README section 3)
+# --------------------------------------------------------------------------------------------
 
 def _zscore(s: pd.Series) -> pd.Series:
     s = s.dropna()

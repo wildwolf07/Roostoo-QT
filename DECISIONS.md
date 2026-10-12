@@ -1,53 +1,158 @@
-# Decision Log
+# Decision log
 
-Every material change to the live bot, why we made it, and the evidence behind it. All times
-are UTC. Each entry maps to a commit in this repository; the live bot only ever runs
-committed code, deployed with `deploy/deploy.sh`.
+Every material change to the live bot, why we made it, and the evidence behind it. Times are UTC.
+The live bot only ever runs committed code, deployed with `deploy/deploy.sh`, so each decision maps
+to a commit. Ideas we tested and rejected are at the end, with their numbers.
 
-| # | Date | Decision | Evidence | Commit |
-|---|---|---|---|---|
-| 1 | Oct 9 | **v0 → v1.** Dropped the fast hourly trend strategy with a BTC regime gate. Moved to slow (7–14 day) momentum: a 50/50 blend of long-only trend and market-neutral cross-sectional momentum, rebalanced daily in 3 tranches | v0 lost money in 69 two-week backtests, with fees about equal to the losses. A rank-IC diagnosis showed short lookbacks *mean-revert* while 7–14 day relative strength persists | `d54caaa` |
-| 2 | Oct 9 | **Go live with v1** on the competition account (initial equity $100,000) | Verified with a real cycle on the test account. Fixed a short-collateral double count found in that test | `393fc0d` |
-| 3 | Oct 10 | **v1 → v2 ensemble** of 4 sleeves: momentum L/S (beta-neutral), momentum long-only, filtered momentum L/S (no lottery longs, only calm shorts), low-risk long-only | 3.8-year, 31-coin study, in-sample vs out-of-sample. The ensemble had the best Sharpe (0.73) and lowest drawdown, and was positive in every year. Live code reproduces research weights exactly (parity 8e-17) | `8c96068` |
-| 4 | Oct 10 | **Risk overlay recalibrated.** Removed the CPPI floor and the 24h loss limit. Drawdown brake loosened to 2.5–7%. Stops widened to disaster-only (6–15%) | Replaying the live overlay on every 14-day window showed the tight overlay *reduced* the OOS median composite from +2.67 to −0.78 (whipsaw) | `80a8062` |
-| 5 | Oct 10 | **Universe 15 → 25 of 29 coins**; PEPE and SHIB removed | Breadth study: Sharpe 0.89 → 1.27, every year above 1.0, flat across 3–5 coins per side. PEPE/SHIB have 18–25 bp spreads on Roostoo | `640a349` |
-| 6 | Oct 10 | **Per-coin trailing stops disabled** (the portfolio drawdown brake stays) | Stops cut Sharpe from 1.27 to 0.75 and lowered the in-sample *and* out-of-sample results without reducing max drawdown. The ensemble lost only −2.3% in the 2025-10-10 crash (market −20.6%) | `0412056` |
-| 7 | Oct 10 | **Drawdown brake 2.5–7% → catastrophe-only 6–12%** | At the live 25-coin config the 2.5–7% brake cut the median 14-day composite in both periods (IS 2.32 → 1.40, OOS 5.00 → 4.21). The 6–12% brake equals 'no overlay' on the median and still trims the worst-case drawdown | `39a452d` |
-| 8 | Oct 10 | **Operational hardening**: Binance data fallback hosts, cancel stale orders on restart, a failed daily rebalance retried up to 5× | Found in a code review of live failure modes; unit-tested | `8b55426`, `b1673d0` |
-| 9 | Oct 10 | **Plan B made a config switch** (sleeve weights), default unchanged | Pre-validated so a high top-20 cutoff can be answered without new code mid-contest | `203166a` |
-| 10 | Oct 10 | **Leaderboard check → stay on Plan A (no change)** | Live leaderboard (Oct 10, 08:32 UTC): we are #8 of 190 overall and #3 in India at +1.0% (India #1 +1.6%, #2 +1.3%). `scripts/leaderboard_decision.py`: P(finishing above India #20) is 77.5% on Plan A vs 73.4% on A+ and 66.4% on B (if #20 ends at 0%). Extra risk only lowers our odds when ahead | — |
-| 11 | Oct 10 | **Endgame lock-in.** From Oct 10 12:00 UTC, exposure falls linearly from 1× (nothing banked) to 0.25× once the contest return reaches +1%, and rises again if the gain shrinks. The deadband scales with exposure so the smaller book still tracks its targets | Finalists are ranked by Sortino/Sharpe/Calmar *after* the top-20 return cut, and those ratios are scale-free only while nothing is banked. `research/endgame.py` (2,675–5,350 historical 7.3-day stretches, fees included) with +1% banked: median composite 10.6 → 30.0 and 25th percentile 0.8 → 14.0. It scores higher at every quantile from 5% to 95% (stochastic dominance), under all four readings of the unpublished formula. P(final return < 0) 22% → 8%, P(< +0.5%) 33% → 14%. Median return +1.20% → +1.15%. With a modelled India field, P(top 20 by return) is about unchanged (79–89% → 83–87%) and P(top 20 and top 5 by composite) rises from 33–41% to 62–67% | see git log |
-| 12 | Oct 11 | **Lock-in floor 0.25× → 0.15×; daily safety net 20:00 → 12:00 UTC** | Real India leaderboard (Oct 10, 20:55 UTC): we are India #3 at +1.1%; India #20 is at −5.2%; only 4 other Indian teams are positive (+1.8%, +1.3%, +0.6%, +0.4%). `research/endgame.py` on this field: P(top 20) 100% for every non-gambling plan. P(top 5 by composite): 1× 62%, 0.25× floor 90%, 0.15× floor 93–94%. P(#1 by composite in India): 9%, 21–23%, 27–32%. Floor kept at 0.15× (not lower) so the bot keeps trading a real book every day. The safety net moved because, if days are counted in HKT, our live days are exactly 8 (Oct 10–17). A 20:00 UTC trade would land on the next HKT day, while 12:00 UTC is the same day in UTC, HKT and IST | see git log |
-| 13 | Oct 11 | **Lock-in no longer re-risks while we are positive: exposure ×0.10 from +0.25% banked (was ×0.15 from +1%)** | After the overnight dip (+1.1% → +0.65%), the old rule would have raised exposure to ×0.45 at the next rebalance to 'win back' return. On the real India field the top-20 return cut is far below zero, so that only adds loss risk. `research/endgame.py` from the current state (+0.65% banked, 0.46% drawdown, ×0.34 live until the next rebalance, refreshed India field): old rule P(loss) 13%, P(top 5 by composite) 79%, P(#1) 21%. New rule: 1%, 94%, 28%. If the gain slips to +0.3%: 60% → 77%. Full risk would give 54% | see git log |
-| 14 | Oct 11 | **Audit fixes: $50 trade threshold for a small book, cached market data** | Systematic audit (docs/ENDGAME.md §4). A planner dry-run on 365 days at ×0.10 gave ~3 orders a day and fewer than 3 on 38% of days, which is thin for 'enough trades each day'. A $50 threshold below ×0.5 gives ~13 a day and never fewer than 3, for ~$1.40/day of fees. If every Binance host failed for a day, the bot would have skipped trading, and we have no spare day. It now trades on the last good bars. Closed form k*_Sharpe = 0.05, k*_Sortino = 0.003 and simulation (P(top 5) flat at ~87% for 0–0.10×) confirm ×0.10 as the constrained optimum | see git log |
-| 15 | Oct 11 | **Lock-in floor ×0.10 → ×0.075; competitor model calibrated with public data** | Competitors' public portfolios and order histories (Roostoo app). The leading team's equity curve, rebuilt from its 15 orders and Binance prices (matches the app to 0.07%), has a 0.57% drawdown and a 30% long-only book. Teams below water have a drawdown at least equal to their loss. With these profiles: P(top 5) 85.8% at ×0.10, 86.1% at ×0.075; P(#1) 20.2% → 23.2%. ×0.075 lies between k*_Sharpe 0.05–0.08 and still gives ≥3 orders every day of the 365-day dry run (×0.05: <3 on 3% of days) | see git log |
-| 16 | Oct 11 | **Contest window corrected to Oct 4 12:00 → Oct 18 12:00 UTC; safety net 12:00 → 10:00 UTC** | The hackathon page in the Roostoo app gives the window as Oct 4 17:30 – Oct 18 17:30 (India time; the app's time zone is confirmed by matching a public fill to Binance prices). The bot was set to stop at Oct 17 23:59 UTC, 12 h early, and would have skipped the Oct 18 00:01 UTC rebalance: a 9th active day if days run from 12:00 UTC. A 12:00 UTC safety net sits exactly on that boundary; 10:00 UTC is inside the same day under every convention (UTC, HKT, IST, contest days). The endgame study re-run on the corrected window: P(top 5) 88.9% and P(#1) 29% at ×0.075; 1× 48.6%. The ordering is unchanged | see git log |
+## Timeline
 
-## Ideas tested and rejected (with numbers)
+| # | Date | Decision | Commit |
+|---|---|---|---|
+| 1 | Oct 9 | v0 → v1: drop the fast trend + regime gate; trade 7–14 day momentum, 3 daily tranches | `d54caaa` |
+| 2 | Oct 9 | Go live with v1 on the competition account | `393fc0d` |
+| 3 | Oct 10 | v1 → v2: equal-weight ensemble of 4 sleeves | `8c96068` |
+| 4 | Oct 10 | Risk overlay recalibrated: CPPI floor and 24h loss limit removed | `80a8062` |
+| 5 | Oct 10 | Universe 15 → 25 coins; PEPE and SHIB excluded | `640a349` |
+| 6 | Oct 10 | Per-coin trailing stops disabled | `0412056` |
+| 7 | Oct 10 | Drawdown brake → catastrophe-only (6–12%) | `39a452d` |
+| 8 | Oct 10 | Operational hardening: data fallbacks, stale-order cancel, bounded retries | `8b55426`, `b1673d0` |
+| 9 | Oct 10 | Contingency sleeve mix made a config switch (default unchanged) | `203166a` |
+| 10 | Oct 10 | Leaderboard check: no change | — |
+| 11 | Oct 10 | Endgame lock-in: exposure scales down as the contest gain is banked | `5d8d2a7` |
+| 12 | Oct 11 | Lock-in floor 0.15×; daily safety net 20:00 → 12:00 UTC | `1df8a40` |
+| 13 | Oct 11 | Lock-in: 0.10× from +0.25% banked, no re-risking while positive | `226934d` |
+| 14 | Oct 11 | Audit fixes: $50 trade threshold for a small book, cached market data | `9087f5b` |
+| 15 | Oct 11 | Lock-in floor 0.075×; competitor model calibrated with public data | `c9731da` |
+| 16 | Oct 11 | Contest window corrected to 12:00–12:00 UTC; safety net at 10:00 UTC | `ffdd15d` |
+
+## Details
+
+### 1. v0 → v1: slow momentum (Oct 9)
+- v0 (fast hourly trend plus a BTC regime gate) lost money in 69 two-week backtests, with fees about
+  equal to the losses.
+- A rank-IC diagnosis showed 1–24h returns **mean-revert** (t ≈ −14), while 7–14 day relative
+  strength persists.
+- v1: a 50/50 blend of long-only trend and market-neutral cross-sectional momentum, rebalanced daily in
+  3 tranches.
+
+### 2. Go live (Oct 9)
+- Verified with a full cycle on the Roostoo test account first. That test found and fixed a
+  short-collateral double count in the equity calculation.
+
+### 3. v2: four-sleeve ensemble (Oct 10)
+- A 3.8-year, 31-coin study, in-sample vs out-of-sample. The ensemble had the best Sharpe (0.73 at the
+  time, 15-coin universe), the lowest drawdown, and was positive in every year.
+- Sleeves: momentum L/S (beta-neutral), momentum long-only, filtered momentum L/S (no lottery longs,
+  only calm shorts), low-risk long-only.
+- Live code reproduces the research weights exactly (parity difference 8e-17).
+
+### 4. Risk overlay recalibrated (Oct 10)
+- Replaying the live overlay on every 14-day window showed the tight overlay (CPPI floor, 24h limit,
+  tight brake) *reduced* the out-of-sample median composite from +2.67 to −0.78, because it sold dips
+  and missed rebounds.
+
+### 5. Universe 15 → 25 coins (Oct 10)
+- Breadth study: Sharpe 0.89 → 1.27; every year above 1.0; flat across 3–5 coins per side
+  (Grinold's fundamental law).
+- PEPE and SHIB excluded for 18–25 bp spreads on Roostoo.
+
+### 6. Per-coin stops disabled (Oct 10)
+- Every stop setting (3–8%, 6–15%, 10–25%) lowered Sharpe in both periods (1.27 → 0.75 for 6–15%) and
+  did not reduce max drawdown.
+- The ensemble lost only 2.3% in the 2025-10-10 crash, against a 20.6% market fall.
+
+### 7. Catastrophe-only drawdown brake (Oct 10)
+- At the live configuration, a 2.5–7% brake cut the median 14-day composite in both periods (in-sample
+  2.32 → 1.40, out-of-sample 5.00 → 4.21).
+- A 6–12% brake matches "no overlay" on the median and still trims the worst case.
+
+### 8. Operational hardening (Oct 10)
+- From a code review of live failure modes: Binance fallback hosts, cancel stale orders on restart,
+  and retry a failed daily rebalance up to 5 times. Unit-tested.
+
+### 9. Contingency switch (Oct 10)
+- A pre-validated alternative sleeve mix (long momentum + low-risk at a higher volatility target),
+  available as a config value in case the top-20 return cutoff turned out high. Never used.
+
+### 10. Leaderboard check (Oct 10)
+- Live leaderboard: #8 of 190 overall, #3 in India at +1.0%.
+- `scripts/leaderboard_decision.py`: more risk only lowers the probability of staying above the
+  top-20 cutoff when already ahead. No change.
+
+### 11. Endgame lock-in (Oct 10)
+- The finalists' portfolio score is a set of **ratios over a fixed window** (Sortino, Sharpe, Calmar).
+  Ratios are scale-free only while nothing is banked. Once a gain is banked, extra risk grows the
+  denominators faster than the numerators.
+- `research/endgame.py`: 5,350 historical 7.3-day stretches with fees, four readings of the
+  unpublished formula. With +1% banked, cutting exposure raised the median composite from 10.6 to
+  30.0 and scored higher at every quantile (stochastic dominance). P(final return < 0) fell from 22%
+  to 8%. Median return fell from +1.20% to +1.15%.
+- First rule: exposure from 1× to 0.25× as the banked return goes 0 → +1%. The deadband scales with
+  exposure.
+
+### 12. Lock-in floor 0.15×; safety net 12:00 UTC (Oct 11)
+- Real India leaderboard: the 20th team was at −5.2%, so the top-20 return cut was not binding.
+- On that field, P(top 5 by composite): 62% at 1×, 90% at a 0.25× floor, 93–94% at a 0.15× floor.
+- If trading days are counted in HKT, our live days were exactly 8, so a 20:00 UTC safety-net trade
+  could land on the next HKT day. Moved to 12:00 UTC.
+
+### 13. No re-risking while positive (Oct 11)
+- After an overnight dip (+1.1% → +0.65%), the first rule would have raised exposure to 0.45× to win
+  return back. With the return cut far below zero, that only adds loss risk.
+- From the real state: P(loss) 13% → 1%, P(top 5 by composite) 79% → 94%. New rule: 1× → 0.10× as
+  the banked return goes 0 → +0.25%.
+
+### 14. Audit fixes (Oct 11)
+- A dry run of the order planner on 365 days at 0.10× gave about 3 orders a day, with fewer than 3
+  on 38% of days. That is thin for the "enough trades each day" rule. Below 0.5× the bot now trades
+  every update of $50 or more: about 13 orders a day, never fewer than 3, for about $1.40 a day in fees.
+- If every Binance host failed for a day, the bot would have skipped trading. It now trades on the
+  last good bars.
+- Closed form (docs/ENDGAME.md): k\*_Sharpe ≈ 0.05, k\*_Sortino ≈ 0.003. Simulation: P(top 5) is flat
+  at about 87% for 0–0.10×.
+
+### 15. Floor 0.075×; competitor model calibrated (Oct 11)
+- Competitors' portfolios and order histories are public in the Roostoo app. Rebuilding the leading
+  team's equity curve from its orders and Binance prices (it matches the app to 0.07%) gave a 0.57%
+  drawdown on a 30% long-only book. Any team below water has a drawdown at least equal to its loss.
+- With these profiles: P(top 5) 85.8% at 0.10× vs 86.1% at 0.075×; P(#1) 20.2% → 23.2%.
+- 0.075× lies between the closed-form Sharpe optima (0.05–0.08) and still gives at least 3 orders
+  every day in the 365-day dry run (0.05×: fewer than 3 on 3% of days).
+
+### 16. Contest window and safety-net hour (Oct 11)
+- The hackathon page gives the window as Oct 4 17:30 – Oct 18 17:30 India time, which is
+  12:00–12:00 UTC. The bot was set to stop at Oct 17 23:59 UTC, 12 hours early, and would have skipped
+  the Oct 18 00:01 UTC rebalance.
+- A 12:00 UTC safety net sits exactly on a 12:00 UTC day boundary. 10:00 UTC is inside the same day
+  under every convention (UTC, HKT, IST, contest days).
+- The endgame study re-run on the corrected window: P(top 5) 88.9% at 0.075×, against 48.6% at 1×.
+
+## Ideas tested and rejected
 
 | Idea | Why it looked promising | Why we rejected it |
 |---|---|---|
-| Fast hourly trend + BTC regime gate (v0) | Classic trend-following | Lost money; fees equal to the losses; the regime gate had no predictive value (forward basket return was negative in every regime) |
-| Short sleeve in RISK_OFF | Profit in downtrends | Made every v0 variant worse |
-| Low-risk long/short (short high-vol / lottery coins) | Strong negative IC (t ≈ −6) | Sharpe −1.1: rare pumps in shorted coins dominate. **IC ≠ P&L** with fat tails |
-| BTC → altcoin catch-up, 8h | IC t-stat 13–16 | Turnover 1.4×/day, so fees win (Sharpe −3.2) |
-| Short-term reversal | 90% of pairs reverse (literature) | Edge 1–2 bp, below fees |
-| Execution timing via reversal / catch-up | Zero-turnover idea | Saves only 1–2 bp per trade |
-| Funding-rate crowding | Practitioner evidence | Significant in-sample, ~0 out-of-sample |
+| Fast hourly trend + BTC regime gate (v0) | Classic trend-following | Lost money; fees equal to the losses; the regime gate had no predictive value |
+| Short sleeve in a risk-off regime | Profit in downtrends | Made every v0 variant worse |
+| Low-risk long/short (short volatile / lottery coins) | Strong negative IC (t ≈ −6) | Sharpe −1.1: rare pumps in the shorted coins dominate. **IC ≠ P&L** with fat tails |
+| BTC → altcoin catch-up, 8h | IC t-stat 13–16 | Turnover 1.4× a day, so fees win (Sharpe −3.2) |
+| Short-term reversal | Most pairs reverse | Edge of 1–2 bp, below fees |
+| Execution timing via reversal / catch-up | No extra turnover | Saves only 1–2 bp per trade |
+| Funding-rate crowding | Practitioner evidence | Significant in-sample, about zero out-of-sample |
 | Market timing (breadth, funding, premium, order flow, vol ratio) | Would capture market direction | Nothing significant in both periods |
-| Tight risk overlay (CPPI 96%, 1.5–4.5% brake, 24h limit) | Lower drawdown | Whipsaw: OOS composite −0.78 vs +2.70 |
-| Per-coin trailing stops (3–8%, 6–15%, 10–25%) | Cut losers early | Sell on noise and miss recoveries; every setting lowered Sharpe in both periods |
-| Bear filter: long-only sleeves off when BTC < 50-day average | Avoid prolonged bears (2022) | Full-period Sharpe 1.08 → 1.55, but the median 14-day composite *falls* 3.27 → 1.95 (it lags and misses rebounds). Kept as a contingency |
-| Residual (idiosyncratic) momentum | Better on 2023–26 (Sharpe 1.27 → 1.53) | Worse on unseen 2021–22 (median 14d composite 2.73 → 1.59) |
-| Volatility-managed scaling (Moreira–Muir) | Classic Sharpe booster for momentum | Full Sharpe 1.08 → 0.73–1.00, worse 2022, higher max DD |
-| End-of-contest taper removal / 2% deadband changes | Small score gains | Mixed across periods, so unchanged |
-| Add 14 more Roostoo coins (ONDO, PENGU, SEI, …) | Breadth helped in the survivorship test | Better recent OOS, but worse 2021–22 and full Sharpe (0.92–1.00 vs 1.08) |
-| All-in concentrated bet to chase the overall #1 return (+37%, an AU-region team) | Only way to reach +37% in 7 days | `research/moonshot.py`: 95% in the most volatile coin reaches +37% in 5.7% of historical stretches, but P(loss) 52%, P(loss > 10%) 22%. P(top 20 in region) falls 84–87% → 48–50%, P(top 5 by composite) 62–68% → 29–30%, P(#1 by composite) is no better (20–21% vs 18–25% for the lock-in). It also breaks consistency with the declared strategy |
-| Higher vol target (1.6–2.0%) | Larger returns | Composite unchanged, fatter loss tail. Kept at 1.2% unless the leaderboard demands more |
+| Tight risk overlay (CPPI 96%, 1.5–4.5% brake, 24h limit) | Lower drawdown | Whipsaw: out-of-sample composite −0.78 vs +2.70 |
+| Per-coin trailing stops | Cut losers early | Sell on noise and miss recoveries; every setting lowered Sharpe in both periods |
+| Bear filter: long-only sleeves off when BTC is below its 50-day average | Avoid prolonged bears (2022) | Full-period Sharpe 1.08 → 1.55, but the median 14-day composite *falls* 3.27 → 1.95 (it lags rebounds). Kept as a contingency |
+| Residual (idiosyncratic) momentum | Better on 2023–26 (Sharpe 1.27 → 1.53) | Worse on the unseen 2021–22 data (median 14-day composite 2.73 → 1.59) |
+| Volatility-managed scaling (Moreira–Muir) | Classic Sharpe booster for momentum | Full Sharpe 1.08 → 0.73–1.00, worse 2022, higher max drawdown |
+| Removing the end-of-contest taper; other deadbands | Small score gains | Mixed across periods, so unchanged |
+| 14 more Roostoo coins (ONDO, PENGU, SEI, …) | Breadth helped in the survivorship test | Better recent results, but worse 2021–22 and full Sharpe (0.92–1.00 vs 1.08) |
+| A higher volatility target (1.6–2.0%) | Larger returns | Composite unchanged, fatter loss tail |
+| An all-in bet to chase the overall #1 return | The only way to reach +37% in 7 days | `research/moonshot.py`: reaches it in 5.7% of stretches but loses money 52% of the time; halves P(finalist) |
 
 ## Process safeguards
-- In-sample (2023-01 → 2025-05) vs out-of-sample (2025-06 → 2026-10) for every signal and portfolio.
+- In-sample (2023-01 → 2025-05) vs out-of-sample (2025-06 → 2026-10) for every signal and portfolio,
+  plus the unseen 2021–22 period.
 - Fees always charged at the taker rate (0.1%), which is conservative versus our maker-first execution.
 - Few variants per study and plateau checks, to limit backtest overfitting (Bailey & López de Prado).
-- Parity test: live strategy code equals research code.
-- Test-account dry runs before every live deploy. The competition key is never used outside the bot.
+- Parity test: the live strategy code equals the research code.
+- Test-account dry runs before live deploys. The competition key is never used outside the bot.

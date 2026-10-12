@@ -1,6 +1,6 @@
-# Finale deck: storyline (10 slides, ~8 minutes)
+# Presentation outline (10 slides, ~8 minutes)
 
-Audience: Susquehanna and industry judges. They reward probabilistic thinking, rigour,
+Audience: the finale judges (Susquehanna and industry). They reward probabilistic thinking, rigour,
 honesty about uncertainty and risk discipline, not a lucky P&L. Every slide makes one claim
 and shows the evidence for it.
 
@@ -12,7 +12,7 @@ One-line result: *2021–26: the same return as BTC at a quarter of the volatili
 drawdown 28% vs 77%); out-of-sample Sharpe 1.83 while BTC fell; live: positive with a sub-0.5% drawdown*
 
 ### 2. The problem, framed by the scoring function
-- Score = 0.4 Sortino + 0.3 Sharpe + 0.3 Calmar, after a top-20-by-return screen.
+- Screening = 50% portfolio ratios (0.4 Sortino + 0.3 Sharpe + 0.3 Calmar) + 50% strategy repository.
 - 70% of the weight punishes downside, and Calmar's denominator is max drawdown.
 - Implication: optimise for a **smooth, positive** curve. Fees (0.1% taker / 0.05% maker)
   make turnover the enemy.
