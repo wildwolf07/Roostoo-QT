@@ -221,3 +221,12 @@ Ground rules
   research/make_results.py -> results/backtest/ (SUMMARY.md, daily equity, yearly, 14-day windows,
   crashes); scripts/export_live.py -> results/forward_test/; crash chart regenerated from the bundle;
   PLAN.md labelled historical.
+
+## Oct 12 06:00 UTC: first rebalance at x0.075 and live export
+- 00:01 UTC rebalance: risk_mult 0.07 (0.075), 23 orders, gross 5.0%, tracking error 0.01%; fills: 9 maker,
+  15 market, 2 limit-taker, 4 limit cancelled.
+- export_live: +1.04%, max DD 0.44% (hourly); contest days +0.95%, -0.26%, +0.35% (so there WAS one small
+  losing contest day; the reconstructed-path claim of none was wrong); our-formula Sortino 26.9, Sharpe 6.7,
+  Calmar 144, composite 56. 77 orders, 63 filled, maker 21/40 spot fills, fees 0.156%, API 99.93% ok.
+- Saved to results/forward_test (LIVE_RESULTS.md, live_equity.csv) and docs/img/live.svg; README section 2.
+- Leaderboard 05:59 UTC: India by return +2.7, +1.6, us +1.1 (#3), +1.0, +0.5.

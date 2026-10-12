@@ -170,31 +170,42 @@ def bars(groups: list, labels: list, colors: list, title: str, subtitle: str, fm
     return _svg(w, h, body, title, subtitle)
 
 
-def live_chart(live: pd.DataFrame) -> str:
+LOCKIN_STEPS = {"2026-10-11T00": "lock-in ×0.34", "2026-10-12T00": "lock-in ×0.075"}
+
+
+def live_chart(live: pd.DataFrame, initial: float = 100_000.0) -> str:
     w, h = 900, 300
     x0, x1, y0, y1 = 64, w - 24, h - 44, 64
     t = pd.to_datetime(live["ts"], utc=True)
-    r = live["equity"].values / live["equity"].values[0] - 1
-    lo, hi = min(r.min(), -0.005), max(r.max(), 0.005) * 1.15
+    r = live["equity"].values / initial - 1
+    step = 0.0025
+    lo, hi = np.floor(min(r.min(), 0.0) / step) * step - step, np.ceil(r.max() / step) * step + step
     sx = _scale(0, len(r) - 1, x0, x1)
     sy = _scale(lo, hi, y0, y1)
     body = ""
-    for v in np.linspace(lo, hi, 5):
+    for v in np.arange(lo, hi + 1e-9, step):
         y = sy(v)
         body += (f'<line x1="{x0}" x2="{x1}" y1="{y:.1f}" y2="{y:.1f}" stroke="{GRID}"/>'
-                 f'<text x="{x0 - 8}" y="{y + 4:.1f}" {FONT} font-size="11" fill="{MUTED}" text-anchor="end">{v:+.1%}</text>')
+                 f'<text x="{x0 - 8}" y="{y + 4:.1f}" {FONT} font-size="11" fill="{MUTED}" text-anchor="end">{v:+.2%}</text>')
     days = sorted(set(t.dt.floor("1D")))
     for d in days[1:]:
         i = int(np.searchsorted(t.values, np.datetime64(d.tz_localize(None))))
         body += (f'<line x1="{sx(i):.1f}" x2="{sx(i):.1f}" y1="{y1}" y2="{y0}" stroke="{GRID}"/>'
                  f'<text x="{sx(i) + 3:.1f}" y="{y0 + 16}" {FONT} font-size="11" fill="{MUTED}">{d:%b %d}</text>')
     body += f'<line x1="{x0}" x2="{x1}" y1="{sy(0):.1f}" y2="{sy(0):.1f}" stroke="{MUTED}"/>'
+    for ts, label in LOCKIN_STEPS.items():
+        hits = np.flatnonzero(live["ts"].values == ts)
+        if len(hits):
+            x = sx(int(hits[0]))
+            body += (f'<line x1="{x:.1f}" x2="{x:.1f}" y1="{y1}" y2="{y0}" stroke="{GREEN}" stroke-dasharray="4 3"/>'
+                     f'<text x="{x + 4:.1f}" y="{y0 - 6}" {FONT} font-size="11" fill="{GREEN}">{label}</text>')
     body += _polyline([sx(i) for i in range(len(r))], [sy(v) for v in r], BLUE, 2.4)
     dd = (1 - live["equity"] / live["equity"].cummax()).max()
-    body += (f'<text x="{x1}" y="{y1 - 6}" {FONT} font-size="12" fill="{INK}" text-anchor="end">'
+    body += (f'<text x="{x0 + 8}" y="{y0 - 10}" {FONT} font-size="13" font-weight="600" fill="{INK}">'
              f'return {r[-1]:+.2%} · max drawdown {dd:.2%}</text>')
-    return _svg(w, h, body, "Live forward test on the Roostoo competition account",
-                f"Hourly equity from {t.iloc[0]:%Y-%m-%d %H:%M} UTC; contest window Oct 4 12:00 to Oct 18 12:00 UTC")
+    return _svg(w, h, body, "Live forward test: Roostoo competition account (return on $100,000)",
+                f"Hourly equity since going live ({t.iloc[0]:%b %d %H:00} UTC). Dashed lines: endgame lock-in steps "
+                f"(exposure cut once the gain was banked)")
 
 
 def main() -> None:
