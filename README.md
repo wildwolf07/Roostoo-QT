@@ -97,7 +97,7 @@ flowchart TB
 
 ![Live forward test](docs/img/live.svg)
 
-| | |
+| | Live result |
 |---|---|
 | Account | Roostoo competition account, $100,000 start. Live since 2026-10-09 21:51 UTC; the contest window is Oct 4 12:00 → Oct 18 12:00 UTC, flat cash before we went live |
 | Result (Oct 12, 06:00 UTC) | **+1.04%**, **max drawdown 0.44%**, against a backtest median 14-day max drawdown of 2.4–2.9% |
