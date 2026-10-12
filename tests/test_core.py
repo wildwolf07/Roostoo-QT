@@ -291,6 +291,28 @@ class TestSchedulerRetry(unittest.TestCase):
         self.assertEqual(len(calls), 1)
 
 
+class TestMetrics(unittest.TestCase):
+    def test_max_drawdown_is_peak_to_trough(self):
+        from bot.metrics import max_drawdown
+        eq = pd.Series([100.0, 120.0, 90.0, 130.0, 117.0])
+        self.assertAlmostEqual(max_drawdown(eq), 0.25)                   # 120 -> 90
+
+    def test_composite_matches_the_competition_formula(self):
+        import math
+        from bot.metrics import summary
+        # hourly marks (the bot's real input): start at 100k, then each day settles at its daily close
+        rets = np.array([0.0, 0.01, -0.005, 0.004, 0.0, -0.002, 0.006, 0.003, -0.001, 0.002, 0.0, 0.004, -0.003, 0.002])
+        closes = 100_000 * np.cumprod(1 + rets)
+        idx = pd.date_range("2026-01-01", periods=24 * len(rets), freq="1h", tz="UTC")
+        eq = pd.Series(np.repeat(closes, 24), idx)
+        eq.iloc[0] = 100_000.0
+        st = summary(eq)
+        r = pd.Series(rets)
+        self.assertAlmostEqual(st["sharpe"], r.mean() / r.std() * math.sqrt(365), places=6)
+        self.assertAlmostEqual(st["sortino"], r.mean() / math.sqrt((np.minimum(r, 0) ** 2).mean()) * math.sqrt(365), places=6)
+        self.assertAlmostEqual(st["composite"], 0.4 * st["sortino"] + 0.3 * st["sharpe"] + 0.3 * st["calmar"], places=9)
+        self.assertGreater(st["calmar"], 0)
+
 class TestMarketDataCache(unittest.TestCase):
     def test_falls_back_to_cached_bars_when_all_hosts_fail(self):
         from unittest import mock

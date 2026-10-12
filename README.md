@@ -276,7 +276,7 @@ lock-in is a mandate-specific overlay set by how this contest is scored.
 | [`bot/config.py`](bot/config.py) | Every tunable in one place, each annotated with the study that set it |
 
 - **Restart-safe:** the portfolio is rebuilt from the exchange every minute, never from memory.
-- **Tested:** 29 unit tests (signing, signals, ensemble, risk, lock-in, order planning, shorts,
+- **Tested:** 31 unit tests (signing, signals, ensemble, risk, lock-in, metrics, order planning, shorts,
   scheduler, data fallback); CI on Python 3.9 and 3.12.
 - **Deployed from commits only:** `deploy/deploy.sh` checks out a commit, runs the tests, then
   restarts the service.
@@ -299,7 +299,7 @@ make results    # results/backtest/: tear sheet, equity, years, 14-day windows, 
 make charts     # docs/img/*.svg from results/
 make parity     # live code == research code (max difference 8e-17)
 make backtest   # event-driven backtest of the live code with 14-day windows
-make test       # 29 unit tests
+make test       # 31 unit tests
 ```
 
 Every study has a script; [research/README.md](research/README.md) maps each question to its
@@ -333,7 +333,7 @@ bot/            live trading bot: scheduler, signals, risk, execution, API clien
 backtest/       event-driven hourly backtester running the live code
 research/       data download, signal lab, portfolio studies, robustness, statistics, endgame, results
 results/        generated backtest results and the live forward-test export
-tests/          29 unit tests (CI: Python 3.9 and 3.12)
+tests/          31 unit tests (CI: Python 3.9 and 3.12)
 scripts/        read-only daily report, live export, health check (test key only), decision tools
 deploy/         EC2 setup, systemd unit, commit-based deploy
 docs/           ENDGAME (risk derivation), FAQ, RUNBOOK, presentation outline, original plan, charts

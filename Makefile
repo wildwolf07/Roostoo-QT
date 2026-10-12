@@ -3,7 +3,7 @@ PY ?= python3
 
 .PHONY: test data results charts parity backtest paper all
 
-test:        ## unit tests (29)
+test:        ## unit tests (31)
 	$(PY) -m unittest -v tests.test_core
 
 data:        ## download hourly data 2021 -> now (needs requirements-research.txt)
